@@ -1,0 +1,66 @@
+﻿@{
+    ViewData["Title"] = "Inicio";
+}
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html, body {
+        height: 100%;
+        font-family: 'Poppins', sans-serif;
+        background-color: #d7eff3;
+    }
+
+    .hero {
+        width: 100vw;
+        height: 100vh;
+        background-image: url('https://wallpapers.com/images/hd/cute-nurse-medical-pattern-s6xh376yd1m032ur.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .hero-text {
+        background-color: rgba(255, 255, 255, 0.85);
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 600px;
+        transition: all 0.3s ease-in-out;
+    }
+
+    @@media (min-width: 1024px) {
+        .hero
+
+    {
+        justify-content: flex-start;
+        padding-left: 10%;
+        text-align: left;
+    }
+
+    .hero-text {
+        max-width: 500px;
+    }
+
+    }
+</style>
+
+<div class="hero">
+    <div class="hero-text">
+        <h1>BIENVENIDO A LA ENFERMERÍA DEL AGRO</h1>
+        <p>Tu bienestar es nuestra prioridad.</p>
+    </div>
+</div>

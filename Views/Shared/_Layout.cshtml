@@ -1,0 +1,142 @@
+﻿﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Enfermeria_app</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Enfermeria_app.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-light bg-white fixed-top border-bottom shadow-sm">
+            <div class="container-fluid d-flex align-items-center">
+                <!-- Botón hamburguesa primero -->
+                <a class="navbar-brand" asp-controller="Inicio" asp-action="Inicio">Enfermeria</a>
+                <button class="navbar-toggler me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
+                        aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Marca o título -->
+
+            </div>
+
+
+
+
+
+
+            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Menú</h5>
+                    <button type="button" class="btn-close me-3" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+
+                </div>
+                <div class="offcanvas-body">
+                    @{
+                        var tipo = Context.Session.GetString("TipoUsuario");
+                    }
+
+                    <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Inicio" asp-action="Inicio">Home</a>
+                        </li>
+
+                        @if (tipo == "Asistente")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="Publicar">Publicar Cita</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="CheckInOut">Check-in/out</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="Cancelar">Cancelar Cita</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="Sacar">Sacar Cita</a>
+                            </li>
+                        }
+                        else if (tipo == "Estudiante")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="Sacar">Sacar Cita</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="Cancelar">Cancelar Cita</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="Historial">Historial</a>
+                            </li>
+                        }
+                        else if (tipo == "Profesor")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="Sacar">Sacar Cita</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="Cancelar">Cancelar Cita</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="Emergencia">Cita de Emergencia</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="Historial">Historial</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="Estudiante_Historial">Estudiante Historial</a>
+                            </li>
+                        }
+                        else if (tipo == "Funcionario")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="Sacar">Sacar Cita</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="Cancelar">Cancelar Cita</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Citas" asp-action="Historial">Historial</a>
+                            </li>
+                        }
+
+                        @if (!string.IsNullOrEmpty(tipo))
+                        {
+                            <li class="nav-item mt-2 ms-2">
+                                <span class="text-muted">Tipo: @tipo</span>
+                            </li>
+                            <li class="nav-item mt-1">
+                                <form asp-controller="Cuenta" asp-action="CerrarSesion" method="post">
+                                    <button type="submit" class="btn btn-link nav-link text-danger">Cerrar sesión</button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+
+
+                </div>
+            </div>
+            
+        </nav>
+
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2025 - Enfermeria_app - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

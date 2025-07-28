@@ -1,0 +1,53 @@
+﻿@model IEnumerable<Enfermeria_app.Models.EnfCita>
+
+
+@{
+    ViewData["Title"] = "Historial de Estudiantes";
+}
+
+<h2>Historial de Estudiantes</h2>
+
+<form asp-controller="Citas" asp-action="Estudiante_Historial" method="get" class="mb-3">
+
+    <div class="form-group">
+        <br> 
+        <input type="text" name="filtro" class="form-control" placeholder="Buscar por nombre o cédula" />
+    </div>
+    <br>
+    <button type="submit" class="btn btn-primary">Buscar</button>
+</form>
+
+@if (!Model.Any())
+{
+    <p>No se encontraron citas para mostrar.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Cédula</th>
+                <th>Horario</th>
+                <th>Llegada</th>
+                <th>Salida</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var cita in Model)
+            {
+                <tr>
+                    <td>@cita.IdPersonaNavigation.Nombre</td>
+                    <td>@cita.IdPersonaNavigation.Cedula</td>
+                    <td>@(cita.IdHorarioNavigation?.Fecha.ToString("dd/MM/yyyy") ?? "") a las @(cita.IdHorarioNavigation?.Hora.ToString() ?? "")</td>
+                    <td>@(cita.HoraLlegada?.ToString() ?? "N/A")</td>
+                    <td>@(cita.HoraSalida?.ToString() ?? "N/A")</td>
+                    <td>@cita.Estado</td>
+                    <td>@cita.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

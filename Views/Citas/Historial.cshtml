@@ -1,0 +1,39 @@
+﻿@model IEnumerable<Enfermeria_app.Models.EnfCita>
+
+@{
+    ViewData["Title"] = "Mi Historial de Citas";
+}
+
+<h2>Mi Historial de Citas</h2>
+
+@if (!Model.Any())
+{
+    <br>
+    <p>No tienes citas registradas.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Horario</th>
+                <th>Llegada</th>
+                <th>Salida</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var cita in Model)
+            {
+                <tr>
+                    <td>@(cita.IdHorarioNavigation?.Fecha.ToString("dd/MM/yyyy") ?? "") a las @(cita.IdHorarioNavigation?.Hora.ToString() ?? "")</td>
+                    <td>@(cita.HoraLlegada?.ToString() ?? "N/A")</td>
+                    <td>@(cita.HoraSalida?.ToString() ?? "N/A")</td>
+                    <td>@cita.Estado</td>
+                    <td>@cita.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
