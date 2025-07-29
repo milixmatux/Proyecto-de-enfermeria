@@ -1,0 +1,19 @@
+# Archivos y carpetas de Visual Studio
+.vs/
+*.suo
+*.user
+
+# Carpetas de compilaci�n
+[Bb]in/
+[Oo]bj/
+
+# Archivos de usuario y temporales
+*.log
+
+# Archivos comprimidos y otros que no deben estar en el repo
+*.zip
+*.rar
+*.7z
+
+# Archivos de publicaci�n
+publish/

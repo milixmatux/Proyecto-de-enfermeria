@@ -87,8 +87,9 @@ namespace Enfermeria_app.Controllers
             if (!string.IsNullOrWhiteSpace(filtro))
             {
                 citas = citas.Where(c =>
-                    c.IdPersonaNavigation.Nombre.Contains(filtro) ||
-                    c.IdPersonaNavigation.Cedula.Contains(filtro));
+                    (c.IdPersonaNavigation.Nombre.Contains(filtro) ||
+                    c.IdPersonaNavigation.Cedula.Contains(filtro)) &&
+                    c.IdPersonaNavigation.Tipo == "Estudiante");
             }
             else
             {
