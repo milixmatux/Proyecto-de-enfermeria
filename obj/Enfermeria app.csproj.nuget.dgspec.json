@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\jfran\\source\\repos\\Enfermeria app\\Enfermeria app\\Enfermeria app.csproj": {}
+    "C:\\Users\\jfran\\source\\repos\\Proyecto_app\\Enfermeria app\\Enfermeria app.csproj": {}
   },
   "projects": {
-    "C:\\Users\\jfran\\source\\repos\\Enfermeria app\\Enfermeria app\\Enfermeria app.csproj": {
+    "C:\\Users\\jfran\\source\\repos\\Proyecto_app\\Enfermeria app\\Enfermeria app.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\jfran\\source\\repos\\Enfermeria app\\Enfermeria app\\Enfermeria app.csproj",
+        "projectUniqueName": "C:\\Users\\jfran\\source\\repos\\Proyecto_app\\Enfermeria app\\Enfermeria app.csproj",
         "projectName": "Enfermeria app",
-        "projectPath": "C:\\Users\\jfran\\source\\repos\\Enfermeria app\\Enfermeria app\\Enfermeria app.csproj",
+        "projectPath": "C:\\Users\\jfran\\source\\repos\\Proyecto_app\\Enfermeria app\\Enfermeria app.csproj",
         "packagesPath": "C:\\Users\\jfran\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\jfran\\source\\repos\\Enfermeria app\\Enfermeria app\\obj\\",
+        "outputPath": "C:\\Users\\jfran\\source\\repos\\Proyecto_app\\Enfermeria app\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

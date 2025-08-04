@@ -99,5 +99,7 @@ namespace Enfermeria_app.Controllers
             return View("Estudiante_Historial", await citas.OrderByDescending(c => c.FechaCreacion).ToListAsync());
         }
 
+
+
     }
 }

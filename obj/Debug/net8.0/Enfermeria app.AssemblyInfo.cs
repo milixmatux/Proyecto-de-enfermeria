@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Enfermeria app")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+87a4b02c9943282a88b543c9aee583ac1ed4e36b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c30cb1df69f7854af956178279cc33f02f466346")]
 [assembly: System.Reflection.AssemblyProductAttribute("Enfermeria app")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Enfermeria app")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,0 +1,180 @@
+﻿/* --- 1. Definición de Variables y Estilos Globales --- */
+
+/* Usamos variables CSS para nuestra paleta de colores. Facilita los cambios. */
+:root {
+    --color-fondo: #d1f2eb;
+    --color-texto-principal: #004d40; /* Verde muy oscuro */
+    --color-borde-suave: #dee2e6;
+    --color-activo-bg: #cce5e0; /* Verde pastel para "Activo" */
+    --color-inactivo-bg: #f8d7da; /* Rojo pastel para "Inactivo" */
+    --color-inactivo-texto: #842029; /* Texto rojo oscuro para "Inactivo" */
+}
+
+body {
+    background-color: var(--color-fondo);
+    font-family: 'Montserrat', sans-serif; /* Fuente por defecto para todo el cuerpo */
+    color: var(--color-texto-principal);
+}
+
+/* --- 2. Estilos para el Layout de la Página de Gestión --- */
+
+.gestion-container {
+    background-color: white;
+    max-width: 960px;
+    margin: 40px auto; /* Centra el contenedor y le da espacio arriba/abajo */
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* Sombra sutil */
+}
+
+/* Estilo del título actualizado para ser más cohesivo */
+.gestion-titulo {
+    font-family: 'Montserrat', sans-serif; /* Cambiamos a la fuente principal */
+    font-weight: 700; /* Lo mantenemos en negrita */
+    font-style: normal; /* Quitamos la cursiva */
+    font-size: 3rem; /* Ligeramente más pequeño para compensar la falta de serifa */
+    color: var(--color-texto-principal);
+    text-align: center;
+    margin-bottom: 40px;
+    letter-spacing: -1px; /* Juntamos un poco las letras para un look más compacto */
+}
+
+/* --- 3. Estilos para la Tabla --- */
+
+/* Hacemos la tabla más limpia y espaciada */
+.gestion-container .table {
+    border-top: none; /* Quitamos el borde superior por defecto de la tabla */
+    margin-top: 20px;
+}
+
+    .gestion-container .table th,
+    .gestion-container .table td {
+        border-left: none; /* Eliminamos los bordes verticales */
+        border-right: none;
+        vertical-align: middle; /* Centramos todo verticalmente */
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    /* Estilo para la cabecera de la tabla */
+    .gestion-container .table thead th {
+        border-bottom-width: 2px;
+        border-color: var(--color-borde-suave);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.8rem;
+        color: var(--color-texto-principal);
+    }
+
+
+/* --- 4. Estilos para el "Number Stepper" (+ y -) --- */
+
+.gestion-container .input-group .btn {
+    background-color: transparent;
+    border-radius: 50%; /* ¡Los hacemos redondos! */
+    width: 34px;
+    height: 34px;
+    font-size: 1.2rem;
+    font-weight: 500;
+    line-height: 1;
+    border: 1px solid var(--color-borde-suave);
+    color: var(--color-texto-principal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out; /* Transición suave para el hover */
+}
+
+    .gestion-container .input-group .btn:hover {
+        background-color: var(--color-texto-principal);
+        color: white;
+    }
+
+/* Quitamos los bordes y el fondo del número del medio */
+.gestion-container .input-group .form-control {
+    border: none;
+    background: none;
+    box-shadow: none; /* Quitamos la sombra azul de focus */
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+/* --- 5. Estilos para los Badges de Estado (Activo/Inactivo) --- */
+
+.estado-texto {
+    padding: 0.5em 1.3em;
+    border-radius: 50rem; /* Los hacemos en forma de píldora */
+    font-weight: 500;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+    /* Sobrescribimos los colores de Bootstrap con los nuestros */
+    .estado-texto.bg-success {
+        background-color: var(--color-activo-bg) !important;
+        color: var(--color-texto-principal) !important;
+    }
+
+    .estado-texto.bg-danger {
+        background-color: var(--color-inactivo-bg) !important;
+        color: var(--color-inactivo-texto) !important;
+    }
+
+
+/* --- 6. Estilo para el Botón Principal "Guardar Cambios" --- */
+
+#btnGuardarCambios {
+    background-color: var(--color-texto-principal);
+    border-color: var(--color-texto-principal);
+    border-radius: 50rem; /* También en forma de píldora */
+    padding: 12px 35px;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s ease-in-out;
+}
+
+    #btnGuardarCambios:hover {
+        opacity: 0.85; /* Aclaramos un poco el botón al pasar el ratón */
+        transform: translateY(-2px); /* Un pequeño salto hacia arriba */
+    }
+
+    /* Estilo para cuando el botón está deshabilitado (Guardando...) */
+    #btnGuardarCambios:disabled {
+        background-color: #9e9e9e;
+        border-color: #9e9e9e;
+    }
+
+/* --- 7. Estilos para el Selector de Fecha --- */
+
+.gestion-container input[type="date"] {
+    background-color: #f8f9fa; /* Un fondo gris muy claro */
+    border: 1px solid var(--color-borde-suave);
+    border-radius: 8px; /* Bordes redondeados consistentes */
+    padding: 10px;
+    font-family: 'Montserrat', sans-serif; /* Usamos la misma fuente del cuerpo */
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-texto-principal);
+    transition: all 0.2s ease-in-out;
+}
+
+    /* Cambiamos el color del borde cuando el input está en foco */
+    .gestion-container input[type="date"]:focus {
+        border-color: var(--color-texto-principal);
+        box-shadow: 0 0 0 3px rgba(0, 77, 64, 0.1); /* Sombra de foco sutil */
+    }
+
+    /* Intentamos estilizar el icono del calendario (funciona mejor en navegadores basados en WebKit/Chrome) */
+    .gestion-container input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+    }
+
+        .gestion-container input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            opacity:  1;
+                    
+        }

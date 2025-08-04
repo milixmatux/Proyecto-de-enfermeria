@@ -7,7 +7,7 @@ public partial class EnfCita
 {
     public int Id { get; set; }
 
-    public int IdPersona { get; set; }
+    public int? IdPersona { get; set; }
 
     public int IdHorario { get; set; }
 

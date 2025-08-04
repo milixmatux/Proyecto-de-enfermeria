@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "6GdBItYInPg=",
+  "dgSpecHash": "Zt4gplp0/Gc=",
   "success": true,
-  "projectFilePath": "C:\\Users\\jfran\\source\\repos\\Enfermeria app\\Enfermeria app\\Enfermeria app.csproj",
+  "projectFilePath": "C:\\Users\\jfran\\source\\repos\\Proyecto_app\\Enfermeria app\\Enfermeria app.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\jfran\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\jfran\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
