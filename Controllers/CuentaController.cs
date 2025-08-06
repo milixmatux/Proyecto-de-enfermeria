@@ -29,7 +29,7 @@ namespace Enfermeria_app.Controllers
         {
             if (!ModelState.IsValid)
                 return View(model);
-
+                
             var user = _context.EnfPersonas
                 .FirstOrDefault(u => u.Usuario == model.Usuario && u.Password == model.Contraseña);
 
@@ -38,6 +38,13 @@ namespace Enfermeria_app.Controllers
                 ViewBag.Error = "Usuario o contraseña incorrectos.";
                 return View(model);
             }
+
+            if (!user.Activo)
+            {
+                ViewBag.Error = "Usuario desactivado. Contacte al administrador.";
+                return View(model);
+            }
+
 
             // Guardar tipo de usuario en sesión (opcional, si querés usarlo además de Claims)
             HttpContext.Session.SetString("TipoUsuario", user.Tipo);
@@ -79,6 +86,25 @@ namespace Enfermeria_app.Controllers
         {
             if (!ModelState.IsValid)
                 return View(model);
+
+            // Verificaciones
+            if (_context.EnfPersonas.Any(u => u.Cedula == model.Cedula))
+            {
+                ViewBag.Error = "La cédula ya está registrada.";
+                return View(model);
+            }
+
+            if (_context.EnfPersonas.Any(u => u.Nombre == model.Nombre))
+            {
+                ViewBag.Error = "El nombre ya está registrado.";
+                return View(model);
+            }
+
+            if (_context.EnfPersonas.Any(u => u.Email == model.Email))
+            {
+                ViewBag.Error = "El correo ya está registrado.";
+                return View(model);
+            }
 
             if (_context.EnfPersonas.Any(u => u.Usuario == model.Usuario))
             {

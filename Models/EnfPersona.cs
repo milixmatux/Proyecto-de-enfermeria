@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Enfermeria_app.Models;
 
@@ -17,6 +18,9 @@ public partial class EnfPersona
 
     public string Usuario { get; set; } = null!;
 
+    [Required]
+    [DataType(DataType.Password)]
+    [StringLength(100, MinimumLength = 6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres.")]
     public string Password { get; set; } = null!;
 
     public string? Departamento { get; set; }
@@ -27,7 +31,11 @@ public partial class EnfPersona
 
     public DateOnly? FechaNacimiento { get; set; }
 
+    [MaxLength(10)] 
+
     public string Sexo { get; set; } = null!;
+
+    public bool Activo { get; set; } = true;
 
     public virtual ICollection<EnfCita> EnfCitaIdPersonaNavigations { get; set; } = new List<EnfCita>();
 

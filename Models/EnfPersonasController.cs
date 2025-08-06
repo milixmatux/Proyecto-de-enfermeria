@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Enfermeria_app.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
-namespace Enfermeria_app.Models
+namespace Enfermeria.Models
 {
     public class EnfPersonasController : Controller
     {
@@ -17,79 +16,118 @@ namespace Enfermeria_app.Models
             _context = context;
         }
 
-        // GET: EnfPersonas
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
-            return View(await _context.EnfPersonas.ToListAsync());
+            var personas = _context.EnfPersonas.Where(p => p.Activo);
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                personas = personas.Where(p => p.Nombre.Contains(searchString));
+            }
+
+            var lista = await personas
+            .OrderByDescending(p => p.Id) // Ordena del más reciente al más antiguo
+            .ToListAsync();
+
+            ViewData["CurrentFilter"] = searchString;
+            return View(lista);
         }
 
-        // GET: EnfPersonas/Details/5
+        public async Task<IActionResult> Inactivos()
+        {
+            var inactivos = await _context.EnfPersonas
+                .Where(p => !p.Activo)
+                .ToListAsync();
+
+            return View(inactivos);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Reactivar(int id)
+        {
+            var persona = await _context.EnfPersonas.FindAsync(id);
+            if (persona != null)
+            {
+                persona.Activo = true;
+                _context.Update(persona);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Inactivos));
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var enfPersona = await _context.EnfPersonas
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (enfPersona == null)
-            {
-                return NotFound();
-            }
+
+            if (enfPersona == null) return NotFound();
 
             return View(enfPersona);
         }
 
-        // GET: EnfPersonas/Create
+        [HttpGet]
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: EnfPersonas/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Cedula,Nombre,Telefono,Email,Usuario,Password,Departamento,Tipo,Seccion,FechaNacimiento,Sexo")] EnfPersona enfPersona)
+        public async Task<IActionResult> Create(EnfPersona model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return View(model);
+
+            if (_context.EnfPersonas.Any(p => p.Cedula == model.Cedula))
             {
-                _context.Add(enfPersona);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                ViewBag.Error = "La cédula ya está registrada.";
+                return View(model);
             }
-            return View(enfPersona);
+
+            if (_context.EnfPersonas.Any(p => p.Nombre == model.Nombre))
+            {
+                ViewBag.Error = "El nombre ya está registrado.";
+                return View(model);
+            }
+
+            if (_context.EnfPersonas.Any(p => p.Email == model.Email))
+            {
+                ViewBag.Error = "El correo ya está registrado.";
+                return View(model);
+            }
+
+            if (_context.EnfPersonas.Any(p => p.Usuario == model.Usuario))
+            {
+                ViewBag.Error = "El usuario ya existe.";
+                return View(model);
+            }
+
+            _context.EnfPersonas.Add(model);
+            await _context.SaveChangesAsync();
+
+            ViewBag.Mensaje = "Registro completado";
+            return View(); // No redirige, se queda en el formulario
         }
 
-        // GET: EnfPersonas/Edit/5
+
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var enfPersona = await _context.EnfPersonas.FindAsync(id);
-            if (enfPersona == null)
-            {
-                return NotFound();
-            }
+            if (enfPersona == null) return NotFound();
+
             return View(enfPersona);
         }
 
-        // POST: EnfPersonas/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Cedula,Nombre,Telefono,Email,Usuario,Password,Departamento,Tipo,Seccion,FechaNacimiento,Sexo")] EnfPersona enfPersona)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Cedula,Nombre,Telefono,Email,Usuario,Password,Departamento,Tipo,Seccion,FechaNacimiento,Sexo,Activo")] EnfPersona enfPersona)
         {
-            if (id != enfPersona.Id)
-            {
-                return NotFound();
-            }
+            if (id != enfPersona.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -100,39 +138,30 @@ namespace Enfermeria_app.Models
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!EnfPersonaExists(enfPersona.Id))
-                    {
+                    if (!_context.EnfPersonas.Any(e => e.Id == enfPersona.Id))
                         return NotFound();
-                    }
                     else
-                    {
                         throw;
-                    }
                 }
                 return RedirectToAction(nameof(Index));
             }
             return View(enfPersona);
         }
 
-        // GET: EnfPersonas/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var enfPersona = await _context.EnfPersonas
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (enfPersona == null)
-            {
-                return NotFound();
-            }
+
+            if (enfPersona == null) return NotFound();
 
             return View(enfPersona);
         }
 
-        // POST: EnfPersonas/Delete/5
+
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -140,16 +169,12 @@ namespace Enfermeria_app.Models
             var enfPersona = await _context.EnfPersonas.FindAsync(id);
             if (enfPersona != null)
             {
-                _context.EnfPersonas.Remove(enfPersona);
+                enfPersona.Activo = false;
+                _context.Update(enfPersona);
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool EnfPersonaExists(int id)
-        {
-            return _context.EnfPersonas.Any(e => e.Id == id);
         }
     }
 }

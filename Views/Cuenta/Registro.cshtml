@@ -123,8 +123,20 @@
 
                 @if (ViewBag.Error != null)
                 {
-                    <div class="alert alert-danger">@ViewBag.Error</div>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @ViewBag.Error
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
                 }
+
+                @if (ViewBag.Mensaje != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @ViewBag.Mensaje
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                }
+
 
                 <button type="submit" class="btn btn-primary w-100">Registrarse</button>
                 <div class="text-center mt-3">

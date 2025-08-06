@@ -1,0 +1,54 @@
+﻿@model IEnumerable<Enfermeria_app.Models.EnfPersona>
+
+@{
+    ViewData["Title"] = "Personas Inactivas";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <h2 class="mb-4 text-center">@ViewData["Title"]</h2>
+
+            <div class="mb-3 text-center text-md-start">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left-circle"></i> Volver al listado de activos
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>@Html.DisplayNameFor(model => model.Cedula)</th>
+                            <th>@Html.DisplayNameFor(model => model.Nombre)</th>
+                            <th>@Html.DisplayNameFor(model => model.Usuario)</th>
+                            <th>@Html.DisplayNameFor(model => model.Departamento)</th>
+                            <th>@Html.DisplayNameFor(model => model.Tipo)</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Cedula</td>
+                                <td>@item.Nombre</td>
+                                <td>@item.Usuario</td>
+                                <td>@item.Departamento</td>
+                                <td>@item.Tipo</td>
+                                <td>
+                                    <form asp-action="Reactivar" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="bi bi-arrow-clockwise"></i> Reactivar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
