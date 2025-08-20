@@ -1,0 +1,185 @@
+﻿@model IEnumerable<Enfermeria_app.Models.EnfCita>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Registro de llegada y salida";
+    var profesores = ViewBag.Profesores as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    string WaIcon() => "🟢";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No hay citas registradas para hoy.</div>
+}
+else
+{
+    <form id="af">@Html.AntiForgeryToken()</form>
+
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Estudiante</th>
+                <th>Sección</th>
+                <th>Hora llegada</th>
+                <th>Hora salida</th>
+                <th>Observaciones / Diagnóstico</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                var id = c.Id;
+                var llego = c.HoraLlegada.HasValue;
+                var salio = c.HoraSalida.HasValue;
+                <tr id="row-@id">
+                    <td>@c.IdPersonaNavigation?.Nombre</td>
+                    <td>@c.IdPersonaNavigation?.Seccion</td>
+
+                    <td id="td-llegada-@id">
+                        @if (!llego)
+                        {
+                            <div class="d-flex gap-2">
+                                <select id="profL-@id" class="form-select" style="max-width: 240px;">
+                                    <option value="">Seleccionar profesor</option>
+                                    @foreach (var p in profesores)
+                                    {
+                                        <option value="@p.Id">@p.Nombre</option>
+                                    }
+                                </select>
+                                <input id="obsL-@id" class="form-control" placeholder="Observaciones (opcional)" style="max-width: 260px;" />
+                                <button type="button" class="btn btn-primary" onclick="onLlegada(@id)">@WaIcon() Registrar llegada</button>
+                            </div>
+                            <div class="text-danger small mt-1" id="errL-@id"></div>
+                        }
+                        else
+                        {
+                            @c.HoraLlegada?.ToString("HH\\:mm")
+                        }
+                    </td>
+
+                    <td id="td-salida-@id">
+                        @if (!salio)
+                        {
+                            <div class="d-flex gap-2">
+                                <select id="profS-@id" class="form-select" style="max-width: 240px;" @(llego ? "" : "disabled")>
+                                    <option value="">Seleccionar profesor</option>
+                                    @foreach (var p in profesores)
+                                    {
+                                        <option value="@p.Id">@p.Nombre</option>
+                                    }
+                                </select>
+                                <input id="diagS-@id" class="form-control" placeholder="Diagnóstico" style="max-width: 260px;" @(llego ? "" : "disabled") />
+                                <button type="button" class="btn btn-success" onclick="onSalida(@id)" @(llego ? "" : "disabled")>@WaIcon() Registrar salida</button>
+                            </div>
+                            <div class="text-danger small mt-1" id="errS-@id"></div>
+                        }
+                        else
+                        {
+                            @c.HoraSalida?.ToString("HH\\:mm")
+                        }
+                    </td>
+
+                    <td id="td-msg-@id">
+                        @{
+                            var msg = !string.IsNullOrWhiteSpace(c.MensajeSalida) ? c.MensajeSalida
+                            : (!string.IsNullOrWhiteSpace(c.MensajeLlegada) ? c.MensajeLlegada : "-");
+                        }
+                        @msg
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section Scripts {
+    <script>
+        const urlLlegada = '@Url.Action("LlegadaAjax", "RegistrarLlegada")';
+        const urlSalida  = '@Url.Action("SalidaAjax", "RegistrarLlegada")';
+
+        function token() {
+            const el = document.querySelector('#af input[name="__RequestVerificationToken"]');
+            return el ? el.value : '';
+        }
+
+        function disableRow(id) {
+            const row = document.getElementById(`row-${id}`);
+            if (!row) return;
+            row.querySelectorAll('input,select,button').forEach(el => el.disabled = true);
+        }
+
+        async function onLlegada(id) {
+            const selProf = document.getElementById(`profL-${id}`);
+            const obs     = document.getElementById(`obsL-${id}`);
+            const err     = document.getElementById(`errL-${id}`);
+
+            err.textContent = '';
+
+            const idProfesor = selProf?.value || '';
+            if (!idProfesor) { err.textContent = 'Selecciona un profesor.'; return; }
+
+            const body = new URLSearchParams();
+            body.set('__RequestVerificationToken', token());
+            body.set('id', id);
+            body.set('mensaje', obs?.value || '');
+            body.set('idProfesor', idProfesor);
+
+            try {
+                const r = await fetch(urlLlegada, { method: 'POST', headers: { 'X-Requested-With':'XMLHttpRequest' }, body });
+                const res = await r.json();
+                if (!res.ok) { err.textContent = res.msg || 'Error.'; return; }
+
+                document.getElementById(`td-llegada-${id}`).innerHTML = res.hora;
+
+                const selProfS = document.getElementById(`profS-${id}`);
+                const diagS    = document.getElementById(`diagS-${id}`);
+                const errS     = document.getElementById(`errS-${id}`);
+                const btnS     = document.querySelector(`#row-${id} button.btn-success`);
+                if (selProfS) selProfS.disabled = false;
+                if (diagS)    diagS.disabled = false;
+                if (btnS)     btnS.disabled  = false;
+                if (errS)     errS.textContent = '';
+
+                if (res.waUrl) window.open(res.waUrl, '_blank');
+            } catch {
+                err.textContent = 'Error inesperado.';
+            }
+        }
+
+        async function onSalida(id) {
+            const selProf = document.getElementById(`profS-${id}`);
+            const diag    = document.getElementById(`diagS-${id}`);
+            const err     = document.getElementById(`errS-${id}`);
+
+            err.textContent = '';
+
+            const idProfesor = selProf?.value || '';
+            if (!idProfesor) { err.textContent = 'Selecciona un profesor.'; return; }
+            if (!diag?.value?.trim()) { err.textContent = 'El diagnóstico es obligatorio.'; return; }
+
+            const body = new URLSearchParams();
+            body.set('__RequestVerificationToken', token());
+            body.set('id', id);
+            body.set('mensaje', diag.value.trim());
+            body.set('idProfesor', idProfesor);
+
+            try {
+                const r = await fetch(urlSalida, { method: 'POST', headers: { 'X-Requested-With':'XMLHttpRequest' }, body });
+                const res = await r.json();
+                if (!res.ok) { err.textContent = res.msg || 'Error.'; return; }
+
+                document.getElementById(`td-salida-${id}`).innerHTML = res.hora;
+                const msgTd = document.getElementById(`td-msg-${id}`);
+                if (msgTd) msgTd.innerText = diag.value.trim();
+
+                disableRow(id);
+
+                if (res.waUrl) window.open(res.waUrl, '_blank');
+            } catch {
+                err.textContent = 'Error inesperado.';
+            }
+        }
+    </script>
+}

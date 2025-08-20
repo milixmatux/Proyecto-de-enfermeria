@@ -35,6 +35,7 @@ builder.Services.AddAuthorization(options =>
             ctx.User.HasClaim("TipoUsuario", "Estudiante") ||
             ctx.User.HasClaim("TipoUsuario", "Funcionario")));
     options.AddPolicy("EmergenciaProfesor", p => p.RequireClaim("TipoUsuario", "Profesor"));
+    options.AddPolicy("Asistente", p => p.RequireClaim("TipoUsuario", "Asistente"));
 });
 
 
