@@ -28,7 +28,7 @@ namespace Enfermeria.Models
             var lista = await personas
             .OrderByDescending(p => p.Id) // Ordena del más reciente al más antiguo
             .ToListAsync();
-
+            
             ViewData["CurrentFilter"] = searchString;
             return View(lista);
         }

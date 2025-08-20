@@ -25,6 +25,19 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Profesor", p => p.RequireClaim("TipoUsuario", "Profesor"));
+    options.AddPolicy("Estudiante", p => p.RequireClaim("TipoUsuario", "Estudiante"));
+    options.AddPolicy("Funcionario", p => p.RequireClaim("TipoUsuario", "Funcionario"));
+    options.AddPolicy("EstudianteFuncionario", p =>
+        p.RequireAssertion(ctx =>
+            ctx.User.HasClaim("TipoUsuario", "Estudiante") ||
+            ctx.User.HasClaim("TipoUsuario", "Funcionario")));
+    options.AddPolicy("EmergenciaProfesor", p => p.RequireClaim("TipoUsuario", "Profesor"));
+});
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

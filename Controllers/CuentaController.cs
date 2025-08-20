@@ -17,6 +17,9 @@ namespace Enfermeria_app.Controllers
             _context = context;
         }
 
+        // CuentaController.cs
+        public IActionResult AccesoDenegado() => View();
+
         // ========== LOGIN ==========
         [HttpGet]
         public IActionResult Login()
@@ -47,6 +50,7 @@ namespace Enfermeria_app.Controllers
 
 
             // Guardar tipo de usuario en sesión (opcional, si querés usarlo además de Claims)
+            HttpContext.Session.SetString("Usuario", user.Usuario);
             HttpContext.Session.SetString("TipoUsuario", user.Tipo);
 
             // Crear los Claims (información del usuario para la cookie)

@@ -95,6 +95,23 @@ namespace Enfermeria_app.Controllers // <-- ¡VERIFICA TU NAMESPACE!
             return View(viewModel);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ObtenerHorarios(DateTime fecha)
+        {
+            var fechaDb = DateOnly.FromDateTime(fecha.Date);
+            var horarios = await _context.EnfHorarios
+                .Include(h => h.EnfCita)
+                .Where(h => h.Fecha == fechaDb)
+                .Select(h => new {
+                    idHorario = h.Id,
+                    hora = h.Hora.ToString(),
+                    disponibles = h.EnfCita.Count(c => c.Estado == "Creada")
+                })
+                .ToListAsync();
+
+            return Json(horarios);
+        }
+
         [HttpPost]
         public async Task<IActionResult> GuardarCambios([FromBody] List<GuardarCitaDto> datosCitas)
         {

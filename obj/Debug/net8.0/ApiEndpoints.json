@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "ContainingType": "Enfermeria_app.Controllers.Api.HorariosApiController",
+    "Method": "GetHorariosLibres",
+    "RelativePath": "api/HorariosApi/libres",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  }
+]
