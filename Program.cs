@@ -38,6 +38,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Asistente", p => p.RequireClaim("TipoUsuario", "Asistente"));
 });
 
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 var app = builder.Build();
 

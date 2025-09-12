@@ -12,6 +12,7 @@ namespace Enfermeria_app.Controllers
         private readonly EnfermeriaContext _context;
 
         public RegistrarLlegadaController(EnfermeriaContext context)
+
         {
             _context = context;
         }

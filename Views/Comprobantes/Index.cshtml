@@ -1,0 +1,73 @@
+﻿@model IEnumerable<Enfermeria_app.Models.EnfCita>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Comprobantes de Citas";
+    var desde = ViewBag.Desde as string ?? DateTime.Today.ToString("yyyy-MM-dd");
+    var hasta = ViewBag.Hasta as string ?? DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form method="get" asp-action="Index" class="row g-3 mb-3">
+    <div class="col-auto">
+        <label class="form-label">Desde</label>
+        <input type="date" name="desde" class="form-control" value="@desde" />
+    </div>
+    <div class="col-auto">
+        <label class="form-label">Hasta</label>
+        <input type="date" name="hasta" class="form-control" value="@hasta" />
+    </div>
+    <div class="col-auto align-self-end">
+        <button class="btn btn-primary" type="submit">Filtrar</button>
+    </div>
+    <div class="col-auto align-self-end">
+        <a class="btn btn-outline-secondary"
+           asp-action="DescargarRango"
+           asp-route-desde="@desde"
+           asp-route-hasta="@hasta">
+            Descargar PDF (rango)
+        </a>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No hay citas en el rango seleccionado.</div>
+}
+else
+{
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Nombre</th>
+                <th>Cédula</th>
+                <th>Estado</th>
+                <th>Llegada</th>
+                <th>Salida</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td>@c.IdHorarioNavigation?.Fecha.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy")</td>
+                    <td>@c.IdHorarioNavigation?.Hora.ToString("HH\\:mm")</td>
+                    <td>@c.IdPersonaNavigation?.Nombre</td>
+                    <td>@c.IdPersonaNavigation?.Cedula</td>
+                    <td>@c.Estado</td>
+                    <td>@(c.HoraLlegada.HasValue? c.HoraLlegada.Value.ToString("HH\\:mm") : "-")</td>
+                    <td>@(c.HoraSalida.HasValue? c.HoraSalida.Value.ToString("HH\\:mm") : "-")</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" asp-action="Descargar" asp-route-id="@c.Id">
+                            Descargar PDF
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

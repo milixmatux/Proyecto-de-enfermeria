@@ -55,7 +55,11 @@
                                     <li class="nav-item">
                                         <a class="nav-link text-dark" asp-controller="EnfPersonas" asp-action="Index">Listado de Personas</a>
                                     </li>
-                                   
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-controller="Comprobantes" asp-action="Index">Comprobantes</a>
+                                    </li>
+
+
                                 }
                                 else if (tipo == "Estudiante")
                                 {
@@ -67,6 +71,9 @@
                                     </li>
                                     <li class="nav-item">
                                         <a class="nav-link text-dark" asp-controller="Citas" asp-action="Historial">Historial</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-controller="Comprobantes" asp-action="Index">Comprobantes</a>
                                     </li>
                                 }
                                 else if (tipo == "Profesor")
@@ -86,6 +93,9 @@
                                     <li class="nav-item">
                                         <a class="nav-link text-dark" asp-controller="Citas" asp-action="Estudiante_Historial">Estudiante Historial</a>
                                     </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-controller="Comprobantes" asp-action="Index">Comprobantes</a>
+                                    </li>
                                 }
                                 else if (tipo == "Funcionario")
                                 {
@@ -97,6 +107,9 @@
                                     </li>
                                     <li class="nav-item">
                                         <a class="nav-link text-dark" asp-controller="Citas" asp-action="Historial">Historial</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-controller="Comprobantes" asp-action="Index">Comprobantes</a>
                                     </li>
                                 }
                             }
