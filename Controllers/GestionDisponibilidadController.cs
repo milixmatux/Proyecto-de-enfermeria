@@ -5,6 +5,8 @@ using Enfermeria_app.ViewModels; // <-- ¡VERIFICA TU NAMESPACE!
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace Enfermeria_app.Controllers // <-- ¡VERIFICA TU NAMESPACE!
 {

@@ -17,121 +17,121 @@ build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = Enfermeria_app
 build_property.RootNamespace = Enfermeria_app
-build_property.ProjectDir = C:\Users\jfran\source\repos\Proyecto_app\Enfermeria app\
+build_property.ProjectDir = C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 8.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = C:\Users\jfran\source\repos\Proyecto_app\Enfermeria app
+build_property.MSBuildProjectDirectory = C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria
 build_property._RazorSourceGeneratorDebug = 
 build_property.EffectiveAnalysisLevelStyle = 8.0
 build_property.EnableCodeStyleSeverity = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Citas/AccesoDenegado.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Citas/AccesoDenegado.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2l0YXNcQWNjZXNvRGVuZWdhZG8uY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Citas/Cancelar.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Citas/Cancelar.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2l0YXNcQ2FuY2VsYXIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Citas/CheckInOut.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Citas/CheckInOut.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2l0YXNcQ2hlY2tJbk91dC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Citas/Emergencia.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Citas/Emergencia.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2l0YXNcRW1lcmdlbmNpYS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Citas/Estudiante_Historial.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Citas/Estudiante_Historial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2l0YXNcRXN0dWRpYW50ZV9IaXN0b3JpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Citas/Historial.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Citas/Historial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2l0YXNcSGlzdG9yaWFsLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Citas/Publicar.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Citas/Publicar.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2l0YXNcUHVibGljYXIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Citas/Sacar.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Citas/Sacar.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2l0YXNcU2FjYXIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Comprobantes/Index.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Comprobantes/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29tcHJvYmFudGVzXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Cuenta/Login.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Cuenta/Login.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3VlbnRhXExvZ2luLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Cuenta/Registro.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Cuenta/Registro.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3VlbnRhXFJlZ2lzdHJvLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/EnfPersonas/Create.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/EnfPersonas/Create.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW5mUGVyc29uYXNcQ3JlYXRlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/EnfPersonas/Delete.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/EnfPersonas/Delete.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW5mUGVyc29uYXNcRGVsZXRlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/EnfPersonas/Details.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/EnfPersonas/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW5mUGVyc29uYXNcRGV0YWlscy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/EnfPersonas/Edit.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/EnfPersonas/Edit.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW5mUGVyc29uYXNcRWRpdC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/EnfPersonas/Inactivos.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/EnfPersonas/Inactivos.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW5mUGVyc29uYXNcSW5hY3Rpdm9zLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/EnfPersonas/Index.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/EnfPersonas/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW5mUGVyc29uYXNcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/GestionDisponibilidad/Index.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/GestionDisponibilidad/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcR2VzdGlvbkRpc3BvbmliaWxpZGFkXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Home/Index.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Home/Privacy.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Inicio/Inicio.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Inicio/Inicio.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSW5pY2lvXEluaWNpby5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/RegistrarLlegada/Index.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/RegistrarLlegada/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVnaXN0cmFyTGxlZ2FkYVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Shared/Error.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Shared/_ValidationScriptsPartial.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/_ViewImports.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/_ViewImports.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/_ViewStart.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/_ViewStart.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/jfran/source/repos/Proyecto_app/Enfermeria app/Views/Shared/_Layout.cshtml]
+[C:/Users/emily/Documents/Proyectos/Proyecto-de-enfermeria/Views/Shared/_Layout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-wbqkwljh0i
