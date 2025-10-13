@@ -1,10 +1,14 @@
 ﻿using Enfermeria_app.Models;
+using Enfermeria_app.Models;     // Asegúrate de cambiar a tu namespace real
+using Enfermeria_app.ViewModels;        // Asegúrate de cambiar a tu namespace real
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
-using Enfermeria_app.ViewModels;        // Asegúrate de cambiar a tu namespace real
-using Enfermeria_app.Models;     // Asegúrate de cambiar a tu namespace real
+using Microsoft.AspNetCore.Authorization;
 
+
+
+[Authorize]
 public class AgendamientoController : Controller
 {
     private readonly EnfermeriaContext _context;

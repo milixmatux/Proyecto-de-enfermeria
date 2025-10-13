@@ -1,12 +1,16 @@
-﻿using Enfermeria_app.Models;
+﻿using BCrypt.Net;
+using Enfermeria_app.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using BCrypt.Net;
 
 namespace Enfermeria_app.Controllers
 {
+    [AllowAnonymous]
+
+
     public class CuentaController : Controller
     {
         private readonly EnfermeriaContext _context;

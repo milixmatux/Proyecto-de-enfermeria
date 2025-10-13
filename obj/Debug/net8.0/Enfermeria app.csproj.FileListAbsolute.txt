@@ -325,4 +325,3 @@ C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\refin
 C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\Enfermeria app.pdb
 C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\Enfermeria app.genruntimeconfig.cache
 C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\ref\Enfermeria app.dll
-C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

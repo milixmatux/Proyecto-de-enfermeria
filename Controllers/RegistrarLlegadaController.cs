@@ -1,12 +1,14 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Enfermeria_app.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Enfermeria_app.Models;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Enfermeria_app.Controllers
 {
+    [Authorize]
     public class RegistrarLlegadaController : Controller
     {
         private readonly EnfermeriaContext _context;

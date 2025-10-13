@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Enfermeria_app.Controllers
 {
+    [Authorize]
     public class CitasController : Controller
     {
         public IActionResult Publicar() => View();

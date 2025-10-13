@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Enfermeria_app.Controllers // <-- ¡VERIFICA TU NAMESPACE!
 {
+    [Authorize]
     public class GestionDisponibilidadController : Controller
     {
         private readonly EnfermeriaContext _context;
