@@ -79,6 +79,8 @@ namespace Enfermeria_app.Controllers
             // Guardar tipo de usuario en sesión
             HttpContext.Session.SetString("Usuario", user.Usuario);
             HttpContext.Session.SetString("TipoUsuario", user.Tipo);
+            HttpContext.Session.SetString("Departamento", user.Departamento ?? "");
+
 
             // Crear Claims
             var claims = new List<Claim>
