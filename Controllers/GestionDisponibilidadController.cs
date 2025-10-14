@@ -19,9 +19,27 @@ namespace Enfermeria_app.Controllers // <-- ¡VERIFICA TU NAMESPACE!
         {
             _context = context;
         }
+        // ⬇️ Agrega este método aquí ⬇️
+        private bool EsFuncionarioEnfermeria(string usuarioActual)
+        {
+            var persona = _context.EnfPersonas.FirstOrDefault(p => p.Usuario == usuarioActual);
+
+            if (persona == null || !persona.Activo)
+                return false;
+
+            return persona.Departamento == "Enfermeria" && persona.Tipo == "Funcionario";
+        }
 
         public async Task<IActionResult> Index(DateTime? fechaSeleccionada)
         {
+            // --- COMIENZO DE LA RESTRICCIÓN ---
+            string usuarioActual = "doctora"; // CAMBIA ESTO por el usuario que quieras probar
+            if (!EsFuncionarioEnfermeria(usuarioActual))
+            {
+                return RedirectToAction("AccesoDenegado", "Home");
+            }
+            // --- FIN DE LA RESTRICCIÓN ---
+
             DateTime fechaPicker = fechaSeleccionada?.Date ?? DateTime.Today;
             DateOnly fechaParaDb = DateOnly.FromDateTime(fechaPicker);
 
@@ -71,6 +89,7 @@ namespace Enfermeria_app.Controllers // <-- ¡VERIFICA TU NAMESPACE!
                 }
                 await _context.EnfCitas.AddRangeAsync(nuevasCitas);
                 await _context.SaveChangesAsync();
+
             }
 
             var horariosDelDia = await _context.EnfHorarios
