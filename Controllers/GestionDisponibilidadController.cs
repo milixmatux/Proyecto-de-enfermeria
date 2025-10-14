@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+
 
 
 namespace Enfermeria_app.Controllers // <-- ¡VERIFICA TU NAMESPACE!
@@ -27,18 +29,32 @@ namespace Enfermeria_app.Controllers // <-- ¡VERIFICA TU NAMESPACE!
             if (persona == null || !persona.Activo)
                 return false;
 
-            return persona.Departamento == "Enfermeria" && persona.Tipo == "Funcionario";
+            // Normaliza los textos para que no importen tildes ni mayúsculas
+            string departamento = persona.Departamento?.Trim().ToLower() ?? "";
+            string tipo = persona.Tipo?.Trim().ToLower() ?? "";
+
+            // Quitar tildes de las palabras (por si usan "enfermería" o "enfermeria")
+            departamento = departamento
+                .Replace("í", "i")
+                .Replace("é", "e")
+                .Replace("á", "a")
+                .Replace("ó", "o")
+                .Replace("ú", "u");
+
+            return departamento.Contains("enfermeria") && tipo.Contains("funcionario");
         }
 
         public async Task<IActionResult> Index(DateTime? fechaSeleccionada)
         {
-            // --- COMIENZO DE LA RESTRICCIÓN ---
-            string usuarioActual = "doctora"; // CAMBIA ESTO por el usuario que quieras probar
-            if (!EsFuncionarioEnfermeria(usuarioActual))
+            // --- RESTRICCIÓN DE ACCESO AUTOMÁTICA ---
+            string? usuarioActual = HttpContext.Session.GetString("Usuario");
+
+            if (string.IsNullOrEmpty(usuarioActual) || !EsFuncionarioEnfermeria(usuarioActual))
             {
                 return RedirectToAction("AccesoDenegado", "Home");
             }
-            // --- FIN DE LA RESTRICCIÓN ---
+            // --- FIN DE RESTRICCIÓN ---
+
 
             DateTime fechaPicker = fechaSeleccionada?.Date ?? DateTime.Today;
             DateOnly fechaParaDb = DateOnly.FromDateTime(fechaPicker);
