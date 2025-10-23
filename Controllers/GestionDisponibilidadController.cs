@@ -21,35 +21,35 @@ namespace Enfermeria_app.Controllers // <-- ¡VERIFICA TU NAMESPACE!
         {
             _context = context;
         }
-        // ⬇️ Agrega este método aquí ⬇️
-        private bool EsFuncionarioEnfermeria(string usuarioActual)
+        private bool TienePermisoGestionHorario(string usuarioActual)
         {
-            var persona = _context.EnfPersonas.FirstOrDefault(p => p.Usuario == usuarioActual);
+            if (string.IsNullOrWhiteSpace(usuarioActual))
+                return false;
+
+            // Normaliza el nombre de usuario
+            string usuarioNormalizado = usuarioActual.Trim().ToLower();
+
+            // Busca en la base de datos la persona que tiene ese usuario
+            var persona = _context.EnfPersonas
+                .AsNoTracking()
+                .FirstOrDefault(p => p.Usuario.Trim().ToLower() == usuarioNormalizado);
 
             if (persona == null || !persona.Activo)
                 return false;
 
-            // Normaliza los textos para que no importen tildes ni mayúsculas
-            string departamento = persona.Departamento?.Trim().ToLower() ?? "";
+            // Normaliza tipo de usuario (por si hay espacios o mayúsculas)
             string tipo = persona.Tipo?.Trim().ToLower() ?? "";
 
-            // Quitar tildes de las palabras (por si usan "enfermería" o "enfermeria")
-            departamento = departamento
-                .Replace("í", "i")
-                .Replace("é", "e")
-                .Replace("á", "a")
-                .Replace("ó", "o")
-                .Replace("ú", "u");
-
-            return departamento.Contains("enfermeria") && tipo.Contains("funcionario");
+            // Permitir solo doctor y asistente
+            return tipo == "doctor" || tipo == "asistente";
         }
+
 
         public async Task<IActionResult> Index(DateTime? fechaSeleccionada)
         {
-            // --- RESTRICCIÓN DE ACCESO AUTOMÁTICA ---
             string? usuarioActual = HttpContext.Session.GetString("Usuario");
 
-            if (string.IsNullOrEmpty(usuarioActual) || !EsFuncionarioEnfermeria(usuarioActual))
+            if (string.IsNullOrEmpty(usuarioActual) || !TienePermisoGestionHorario(usuarioActual))
             {
                 return RedirectToAction("AccesoDenegado", "Home");
             }
