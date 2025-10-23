@@ -124,14 +124,6 @@
                                     </li>
                                 }
                             }
-                           @if (tipo == "Doctor" || tipo == "Asistente")
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-controller="GestionDisponibilidad" asp-action="Index">
-                                        Publicar horario
-                                    </a>
-                                </li>
-                            }
 
 
                             @if (!string.IsNullOrEmpty(tipo))
