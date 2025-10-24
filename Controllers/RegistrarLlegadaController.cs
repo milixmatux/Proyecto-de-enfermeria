@@ -19,7 +19,11 @@ namespace Enfermeria_app.Controllers
             _context = context;
         }
 
-        bool EsAsistente() => User?.Claims?.Any(c => c.Type == "TipoUsuario" && c.Value == "Asistente") == true;
+        bool EsPersonalAutorizado()
+        {
+            var tipo = User?.Claims?.FirstOrDefault(c => c.Type == "TipoUsuario")?.Value;
+            return tipo == "Asistente" || tipo == "Doctor";
+        }
 
         string NormalizarCR(string? tel)
         {
@@ -33,7 +37,7 @@ namespace Enfermeria_app.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            if (!EsAsistente()) return RedirectToAction("AccesoDenegado", "Cuenta");
+            if (!EsPersonalAutorizado()) return RedirectToAction("AccesoDenegado", "Cuenta");
 
             var hoy = DateOnly.FromDateTime(DateTime.Today);
 
@@ -60,7 +64,7 @@ namespace Enfermeria_app.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LlegadaAjax(int id, string? mensaje, int idProfesor)
         {
-            if (!EsAsistente()) return Json(new { ok = false, msg = "Acceso denegado." });
+            if (!EsPersonalAutorizado()) return Json(new { ok = false, msg = "Acceso denegado." });
 
             var cita = await _context.EnfCitas
                 .Include(c => c.IdPersonaNavigation)
@@ -96,7 +100,7 @@ namespace Enfermeria_app.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SalidaAjax(int id, string mensaje, int idProfesor)
         {
-            if (!EsAsistente()) return Json(new { ok = false, msg = "Acceso denegado." });
+            if (!EsPersonalAutorizado()) return Json(new { ok = false, msg = "Acceso denegado." });
 
             var cita = await _context.EnfCitas
                 .Include(c => c.IdPersonaNavigation)
