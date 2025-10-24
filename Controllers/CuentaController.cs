@@ -87,7 +87,10 @@ namespace Enfermeria_app.Controllers
             {
                 new Claim(ClaimTypes.Name, user.Usuario),
                 new Claim("TipoUsuario", user.Tipo),
-                new Claim("Nombre", user.Nombre)
+                new Claim("Nombre", user.Nombre),
+                new Claim("Departamento", user.Departamento ?? "")
+
+
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

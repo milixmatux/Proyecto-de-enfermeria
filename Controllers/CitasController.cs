@@ -306,6 +306,42 @@ namespace Enfermeria_app.Controllers
 
             return View("Historial", citas);
         }
+        [Authorize(Policy = "EstudianteFuncionario")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelarCita(int id)
+        {
+            var username = User.Identity?.Name;
+            var persona = await _context.EnfPersonas.FirstOrDefaultAsync(p => p.Usuario == username);
+            if (persona == null) return RedirectToAction("Login", "Cuenta");
+
+            var cita = await _context.EnfCitas
+                .Include(c => c.IdHorarioNavigation)
+                .FirstOrDefaultAsync(c => c.Id == id && c.IdPersona == persona.Id);
+
+            if (cita == null)
+            {
+                TempData["Error"] = "No se encontró la cita.";
+                return RedirectToAction(nameof(Historial));
+            }
+
+            // Solo permitir cancelar la cita si es para hoy y está creada
+            var hoy = DateOnly.FromDateTime(DateTime.Today);
+            if (cita.IdHorarioNavigation.Fecha != hoy || cita.Estado != "Creada")
+            {
+                TempData["Error"] = "Solo puedes cancelar citas del día actual que estén activas.";
+                return RedirectToAction(nameof(Historial));
+            }
+
+            cita.Estado = "Cancelada";
+            cita.FechaModificacion = DateTime.Now;
+            cita.UsuarioModificacion = username;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Mensaje"] = "Tu cita fue cancelada correctamente.";
+            return RedirectToAction(nameof(Historial));
+        }
 
         public async Task<IActionResult> Estudiante_Historial(string filtro = null)
         {

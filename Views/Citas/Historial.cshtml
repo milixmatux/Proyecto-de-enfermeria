@@ -21,6 +21,7 @@ else
                 <th>Salida</th>
                 <th>Estado</th>
                 <th>Fecha</th>
+                <th>Acciones</th> <!-- 🔹 NUEVA COLUMNA -->
             </tr>
         </thead>
         <tbody>
@@ -32,8 +33,26 @@ else
                     <td>@(cita.HoraSalida?.ToString() ?? "N/A")</td>
                     <td>@cita.Estado</td>
                     <td>@cita.FechaCreacion.ToString("dd/MM/yyyy")</td>
+
+                    <!-- 🔹 NUEVA CELDA CON EL BOTÓN -->
+                    <td class="text-end">
+                        @if (cita.Estado == "Creada" && cita.IdHorarioNavigation.Fecha == DateOnly.FromDateTime(DateTime.Today))
+                        {
+                            <form asp-action="CancelarCita" asp-controller="Citas" method="post" style="display:inline;">
+                                <input type="hidden" name="id" value="@cita.Id" />
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de cancelar esta cita?');">
+                                    Cancelar
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="text-muted">N/A</span>
+                        }
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
+
 }

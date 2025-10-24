@@ -19,7 +19,11 @@ namespace Enfermeria_app.Controllers
             _pdf = new ComprobantePdfService(); // ✅ ahora sin parámetros
         }
 
-        bool EsAsistente() => User?.Claims?.Any(c => c.Type == "TipoUsuario" && c.Value == "Asistente") == true;
+        bool EsPersonalAutorizado()
+        {
+            var tipo = User?.Claims?.FirstOrDefault(c => c.Type == "TipoUsuario")?.Value;
+            return tipo == "Asistente" || tipo == "Doctor";
+        }
         string? Usuario() => User?.Identity?.Name;
 
         DateOnly? ParseDate(string? v)
@@ -42,7 +46,7 @@ namespace Enfermeria_app.Controllers
                 .Include(c => c.IdHorarioNavigation)
                 .AsQueryable();
 
-            if (!EsAsistente())
+            if (!EsPersonalAutorizado())
             {
                 var u = Usuario();
                 var persona = await _context.EnfPersonas.FirstOrDefaultAsync(p => p.Usuario == u);
@@ -51,6 +55,7 @@ namespace Enfermeria_app.Controllers
                 else
                     q = q.Where(c => false);
             }
+
 
             q = q.Where(c => c.IdHorarioNavigation != null &&
                              c.IdHorarioNavigation.Fecha >= d1 &&
@@ -74,7 +79,7 @@ namespace Enfermeria_app.Controllers
                 .Include(c => c.IdHorarioNavigation)
                 .Where(c => c.Id == id);
 
-            if (!EsAsistente())
+            if (!EsPersonalAutorizado())
             {
                 var u = Usuario();
                 var persona = await _context.EnfPersonas.FirstOrDefaultAsync(p => p.Usuario == u);
@@ -103,7 +108,7 @@ namespace Enfermeria_app.Controllers
                             c.IdHorarioNavigation.Fecha >= d1 &&
                             c.IdHorarioNavigation.Fecha <= d2);
 
-            if (!EsAsistente())
+            if (!EsPersonalAutorizado())
             {
                 var u = Usuario();
                 var persona = await _context.EnfPersonas.FirstOrDefaultAsync(p => p.Usuario == u);
