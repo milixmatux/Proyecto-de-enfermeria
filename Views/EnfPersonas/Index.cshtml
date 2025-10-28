@@ -19,14 +19,10 @@
         </div>
 
         <div class="col-12 col-md-6">
-            <form asp-action="Index" method="get" class="d-flex justify-content-md-end">
-                <div class="input-group w-100">
-                    <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control" placeholder="Buscar por nombre" />
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-search"></i> Buscar
-                    </button>
-                </div>
-            </form>
+            <div class="input-group w-100">
+                <input type="text" id="searchBox" class="form-control" placeholder="Buscar por nombre..." autocomplete="off" />
+            </div>
+
         </div>
     </div>
 
@@ -92,4 +88,22 @@
             </tbody>
         </table>
     </div>
+    @section Scripts {
+        <script>
+            const searchBox = document.getElementById("searchBox");
+            const tableBody = document.querySelector("tbody");
+
+            searchBox.addEventListener("keyup", async () => {
+                const query = searchBox.value.trim();
+
+                // Hacer una llamada AJAX al servidor
+                const response = await fetch(`/EnfPersonas/Buscar?term=${encodeURIComponent(query)}`);
+                const html = await response.text();
+
+                // Reemplazar solo el contenido del cuerpo de la tabla
+                tableBody.innerHTML = html;
+            });
+        </script>
+    }
+
 </div>

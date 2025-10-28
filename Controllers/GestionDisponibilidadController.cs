@@ -76,16 +76,19 @@ namespace Enfermeria_app.Controllers // <-- ¡VERIFICA TU NAMESPACE!
             if (!existenHorarios)
             {
                 var nuevosHorarios = new List<EnfHorario>();
-                for (int hora = 7; hora <= 17; hora++)
+
+                // Empieza a las 7:00 y termina a las 17:00 (5 p.m.)
+                for (var hora = new TimeOnly(7, 0); hora < new TimeOnly(17, 0); hora = hora.AddMinutes(30))
                 {
                     nuevosHorarios.Add(new EnfHorario
                     {
                         Fecha = fechaParaDb,
-                        Hora = new TimeOnly(hora, 0, 0),
+                        Hora = hora,
                         Estado = "Activo",
                         UsuarioCreacion = "Sistema"
                     });
                 }
+
                 await _context.EnfHorarios.AddRangeAsync(nuevosHorarios);
                 await _context.SaveChangesAsync();
 
@@ -105,8 +108,8 @@ namespace Enfermeria_app.Controllers // <-- ¡VERIFICA TU NAMESPACE!
                 }
                 await _context.EnfCitas.AddRangeAsync(nuevasCitas);
                 await _context.SaveChangesAsync();
-
             }
+
 
             var horariosDelDia = await _context.EnfHorarios
                 .Where(h => h.Fecha == fechaParaDb)

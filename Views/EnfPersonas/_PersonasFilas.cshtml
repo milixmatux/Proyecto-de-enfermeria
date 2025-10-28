@@ -1,0 +1,34 @@
+﻿@model IEnumerable<Enfermeria_app.Models.EnfPersona>
+
+@if (!Model.Any())
+{
+    <tr>
+        <td colspan="12" class="text-center text-danger">
+            No se encontraron resultados.
+        </td>
+    </tr>
+}
+else
+{
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.Cedula</td>
+            <td>@item.Nombre</td>
+            <td>@item.Tipo</td>
+            <td>
+                <div class="btn-group d-none d-md-flex" role="group">
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm text-white">
+                        <i class="bi bi-eye"></i> Detalles
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">
+                        <i class="bi bi-x-circle"></i> Desactivar
+                    </a>
+                </div>
+            </td>
+        </tr>
+    }
+}
