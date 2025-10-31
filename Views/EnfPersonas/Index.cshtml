@@ -14,6 +14,7 @@
     }
 
 
+
     <!-- Controles superiores -->
     <div class="row align-items-center mb-3">
         <div class="col-12 col-md-6 mb-2 mb-md-0 d-flex gap-2">
@@ -65,29 +66,35 @@
                             <td>
                                 <!-- Botones de acción: horizontales en escritorio, verticales en móvil -->
                                 <div class="btn-group d-none d-md-flex" role="group">
-                                    <a asp-action="CitaEmergencia" asp-route-id="@item.Id" class="btn btn-danger btn-sm">
-                                        <i class="bi bi-plus-circle"></i> Cita Emergencia
-                                    </a>
+                                    <button type="button" class="btn btn-danger btn-sm btnEmergencia" data-id="@item.Id">
+                                        <i class="bi bi-activity"></i> Emergencia
+                                    </button>
 
-                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm text-white">
+
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">
                                         <i class="bi bi-eye"></i> Detalles
                                     </a>
+
                                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">
                                         <i class="bi bi-x-circle"></i> Desactivar
                                     </a>
+
                                 </div>
 
                                 <!-- Versión vertical solo visible en pantallas pequeñas -->
                                 <div class="d-flex d-md-none flex-column gap-1">
-                                    <a asp-action="CitaEmergencia" asp-route-id="@item.Id" class="btn btn-danger btn-sm">
-                                        <i class="bi bi-plus-circle"></i> Cita Emergencia
-                                    </a>
-                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm w-100 text-white">
+                                    <button type="button" class="btn btn-danger btn-sm btnEmergencia" data-id="@item.Id">
+                                        <i class="bi bi-activity"></i> Emergencia
+                                    </button>
+
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">
                                         <i class="bi bi-eye"></i> Detalles
                                     </a>
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm w-100">
+
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">
                                         <i class="bi bi-x-circle"></i> Desactivar
                                     </a>
+
                                 </div>
                             </td>
                         </tr>
@@ -98,20 +105,37 @@
     </div>
     @section Scripts {
         <script>
-            const searchBox = document.getElementById("searchBox");
-            const tableBody = document.querySelector("tbody");
+            document.addEventListener("DOMContentLoaded", function () {
+                // Escuchar los clics en todos los botones de emergencia
+                document.querySelectorAll(".btnEmergencia").forEach(btn => {
+                    btn.addEventListener("click", async function (e) {
+                        e.preventDefault(); // <- evita redirecciones o interferencias
+                        e.stopPropagation();
 
-            searchBox.addEventListener("keyup", async () => {
-                const query = searchBox.value.trim();
+                        const id = this.getAttribute("data-id");
 
-                // Hacer una llamada AJAX al servidor
-                const response = await fetch(`/EnfPersonas/Buscar?term=${encodeURIComponent(query)}`);
-                const html = await response.text();
+                        if (!confirm("¿Deseas crear una cita de emergencia para esta persona?")) return;
 
-                // Reemplazar solo el contenido del cuerpo de la tabla
-                tableBody.innerHTML = html;
+                        try {
+                            const response = await fetch(`/EnfPersonas/CitaEmergencia/${id}`, {
+                                method: "GET"
+                            });
+                            const result = await response.json();
+
+                            if (result.success) {
+                                alert(result.message); // Muestra mensaje de éxito
+                            } else {
+                                alert("❌ No se pudo crear la cita de emergencia.");
+                            }
+                        } catch (error) {
+                            console.error("Error:", error);
+                            alert("⚠️ Error al crear la cita de emergencia.");
+                        }
+                    });
+                });
             });
         </script>
     }
+
 
 </div>

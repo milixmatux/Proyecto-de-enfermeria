@@ -319,10 +319,10 @@ C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\stati
 C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\staticwebassets.build.json.cache
 C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\Enfermer.426C3BD3.Up2Date
 C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\Enfermeria app.dll
 C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\refint\Enfermeria app.dll
 C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\Enfermeria app.pdb
 C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\Enfermeria app.genruntimeconfig.cache
 C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\ref\Enfermeria app.dll
-C:\Users\emily\Documents\Proyectos\Proyecto-de-enfermeria\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

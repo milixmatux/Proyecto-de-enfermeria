@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Enfermeria_app.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Enfermeria_app.Models;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Enfermeria_app.Controllers
 {
@@ -53,30 +55,95 @@ namespace Enfermeria_app.Controllers
             // Renderiza solo las filas (partial view)
             return PartialView("_PersonasFilas", lista);
         }
-    
-    [HttpGet]
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var enfPersona = await _context.EnfPersonas
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (enfPersona == null) return NotFound();
+
+            return View(enfPersona);
+        }
+
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var enfPersona = await _context.EnfPersonas
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (enfPersona == null) return NotFound();
+
+            return View(enfPersona);
+        }
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var enfPersona = await _context.EnfPersonas.FindAsync(id);
+            if (enfPersona != null)
+            {
+                enfPersona.Activo = false;
+                _context.Update(enfPersona);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
         public async Task<IActionResult> CitaEmergencia(int id)
         {
             var persona = await _context.EnfPersonas.FindAsync(id);
             if (persona == null)
                 return NotFound();
 
-            // Crear nueva cita de emergencia
+            // Hora actual
+            var ahora = DateTime.Now;
+            var fechaHoy = DateOnly.FromDateTime(ahora);
+            var horaActual = TimeOnly.FromDateTime(ahora);
+
+            // Buscar si ya hay horario para hoy en esa hora exacta
+            var horario = await _context.EnfHorarios
+                .FirstOrDefaultAsync(h => h.Fecha == fechaHoy && h.Hora == horaActual);
+
+            // Si no existe, crear uno nuevo
+            if (horario == null)
+            {
+                horario = new EnfHorario
+                {
+                    Fecha = fechaHoy,
+                    Hora = horaActual,
+                    Estado = "Activo",
+                    UsuarioCreacion = "Emergencia"
+                };
+                _context.EnfHorarios.Add(horario);
+                await _context.SaveChangesAsync();
+            }
+
+            // Crear cita con estado "Creada" (válido según tu restricción CHECK)
             var cita = new EnfCita
             {
                 IdPersona = persona.Id,
-                FechaCreacion = DateTime.Now,
-                Estado = "Emergencia",
-                IdHorario = null, // si tu modelo lo requiere, puedes crear uno especial o dejarlo null
-                HoraLlegada = DateTime.Now,
-                HoraSalida = null
+                IdHorario = horario.Id,
+                FechaCreacion = ahora,
+                Estado = "Creada", // ✅ Valor permitido
+                HoraLlegada = TimeOnly.FromDateTime(ahora),
+                UsuarioCreacion = "Emergencia" // 👈 indicamos que fue cita de emergencia
             };
 
-            _context.EnfCita.Add(cita);
+            _context.EnfCitas.Add(cita);
             await _context.SaveChangesAsync();
 
-            TempData["Mensaje"] = $"Se ha generado una cita de emergencia para {persona.Nombre} a las {DateTime.Now:hh\\:mm tt}.";
-            return RedirectToAction(nameof(Index));
+            TempData["Mensaje"] = $"✅ Se ha registrado una cita de emergencia para {persona.Nombre} a las {horaActual}.";
+
+            // En lugar de redirigir, devolvemos un mensaje JSON para mostrarlo sin recargar la página
+            return Json(new { success = true, message = $"Cita de emergencia creada para {persona.Nombre}" });
         }
-}
+
+
+
     }
+}
