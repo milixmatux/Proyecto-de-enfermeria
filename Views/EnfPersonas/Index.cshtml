@@ -6,14 +6,11 @@
 
 <div class="container mt-4">
     <h2 class="mb-4">@ViewData["Title"]</h2>
+
     @if (TempData["Mensaje"] != null)
     {
-        <div class="alert alert-success">
-            @TempData["Mensaje"]
-        </div>
+        <div class="alert alert-success">@TempData["Mensaje"]</div>
     }
-
-
 
     <!-- Controles superiores -->
     <div class="row align-items-center mb-3">
@@ -28,9 +25,8 @@
 
         <div class="col-12 col-md-6">
             <div class="input-group w-100">
-                <input type="text" id="searchBox" class="form-control" placeholder="Buscar por nombre..." autocomplete="off" />
+                <input type="text" id="searchInput" class="form-control" placeholder="Buscar por nombre o cédula..." autocomplete="off" />
             </div>
-
         </div>
     </div>
 
@@ -45,7 +41,7 @@
                     <th>Acciones</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="tablaPersonas">
                 @if (!Model.Any())
                 {
                     <tr>
@@ -64,26 +60,24 @@
                             <td>@item.Nombre</td>
                             <td>@item.Tipo</td>
                             <td>
-                                <!-- Botones de acción: horizontales en escritorio, verticales en móvil -->
                                 <div class="btn-group d-none d-md-flex" role="group">
-                                    <button type="button" class="btn btn-danger btn-sm btnEmergencia" data-id="@item.Id">
+                                    <button type="button" class="btn btn-danger btn-sm btnCitaEmergencia"
+                                            data-id="@item.Id" data-nombre="@item.Nombre">
                                         <i class="bi bi-activity"></i> Emergencia
                                     </button>
-
 
                                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">
                                         <i class="bi bi-eye"></i> Detalles
                                     </a>
 
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-warning btn-sm">
                                         <i class="bi bi-x-circle"></i> Desactivar
                                     </a>
-
                                 </div>
 
-                                <!-- Versión vertical solo visible en pantallas pequeñas -->
                                 <div class="d-flex d-md-none flex-column gap-1">
-                                    <button type="button" class="btn btn-danger btn-sm btnEmergencia" data-id="@item.Id">
+                                    <button type="button" class="btn btn-danger btn-sm btnCitaEmergencia"
+                                            data-id="@item.Id" data-nombre="@item.Nombre">
                                         <i class="bi bi-activity"></i> Emergencia
                                     </button>
 
@@ -91,10 +85,9 @@
                                         <i class="bi bi-eye"></i> Detalles
                                     </a>
 
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-warning btn-sm">
                                         <i class="bi bi-x-circle"></i> Desactivar
                                     </a>
-
                                 </div>
                             </td>
                         </tr>
@@ -103,39 +96,51 @@
             </tbody>
         </table>
     </div>
-    @section Scripts {
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                // Escuchar los clics en todos los botones de emergencia
-                document.querySelectorAll(".btnEmergencia").forEach(btn => {
-                    btn.addEventListener("click", async function (e) {
-                        e.preventDefault(); // <- evita redirecciones o interferencias
-                        e.stopPropagation();
+</div>
 
-                        const id = this.getAttribute("data-id");
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // --- 🔍 BÚSQUEDA EN TIEMPO REAL ---
+            $("#searchInput").on("keyup", function () {
+                var term = $(this).val();
 
-                        if (!confirm("¿Deseas crear una cita de emergencia para esta persona?")) return;
-
-                        try {
-                            const response = await fetch(`/EnfPersonas/CitaEmergencia/${id}`, {
-                                method: "GET"
-                            });
-                            const result = await response.json();
-
-                            if (result.success) {
-                                alert(result.message); // Muestra mensaje de éxito
-                            } else {
-                                alert("❌ No se pudo crear la cita de emergencia.");
-                            }
-                        } catch (error) {
-                            console.error("Error:", error);
-                            alert("⚠️ Error al crear la cita de emergencia.");
-                        }
-                    });
+                $.ajax({
+                    url: '/EnfPersonas/Buscar',
+                    type: 'GET',
+                    data: { term: term },
+                    success: function (result) {
+                        $("#tablaPersonas").html(result); // Reemplaza las filas de la tabla
+                    },
+                    error: function () {
+                        console.error("❌ Error al buscar personas.");
+                    }
                 });
             });
-        </script>
-    }
 
+            // --- 🚨 CITA DE EMERGENCIA ---
+            $(document).on("click", ".btnCitaEmergencia", function () {
+                var idPersona = $(this).data("id");
+                var nombre = $(this).data("nombre");
 
-</div>
+                if (!confirm("¿Deseas crear una cita de emergencia para " + nombre + "?"))
+                    return;
+
+                $.ajax({
+                    url: '/EnfPersonas/CitaEmergencia/' + idPersona,
+                    type: 'POST',
+                    success: function (response) {
+                        if (response.success) {
+                            alert(response.message);
+                        } else {
+                            alert("⚠️ " + response.message);
+                        }
+                    },
+                    error: function () {
+                        alert("❌ Error al crear la cita de emergencia.");
+                    }
+                });
+            });
+        });
+    </script>
+}

@@ -1,6 +1,7 @@
 ﻿using Enfermeria_app.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,12 +16,10 @@ namespace Enfermeria_app.Controllers
             _context = context;
         }
 
-        // ✅ Acción principal (ya existe la vista Index.cshtml)
-        public async Task<IActionResult> Index(string? searchString)
+        // 📋 LISTADO DE PERSONAS ACTIVAS
+        public async Task<IActionResult> Index(string searchString)
         {
-            var personas = from p in _context.EnfPersonas
-                           where p.Activo == true
-                           select p;
+            var personas = _context.EnfPersonas.Where(p => p.Activo);
 
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -29,19 +28,19 @@ namespace Enfermeria_app.Controllers
                     p.Cedula.Contains(searchString));
             }
 
-            var lista = await personas.OrderBy(p => p.Nombre).ToListAsync();
-            ViewData["CurrentFilter"] = searchString;
+            var lista = await personas
+                .OrderByDescending(p => p.Id)
+                .ToListAsync();
 
+            ViewData["CurrentFilter"] = searchString;
             return View(lista);
         }
 
-        // ✅ Acción para buscar en tiempo real
+        // 🔍 FILTRO EN TIEMPO REAL (AJAX)
         [HttpGet]
         public async Task<IActionResult> Buscar(string term)
         {
-            var personas = from p in _context.EnfPersonas
-                           where p.Activo == true
-                           select p;
+            var personas = _context.EnfPersonas.Where(p => p.Activo);
 
             if (!string.IsNullOrEmpty(term))
             {
@@ -50,11 +49,37 @@ namespace Enfermeria_app.Controllers
                     p.Cedula.Contains(term));
             }
 
-            var lista = await personas.OrderBy(p => p.Nombre).ToListAsync();
-
-            // Renderiza solo las filas (partial view)
+            var lista = await personas.OrderByDescending(p => p.Id).ToListAsync();
             return PartialView("_PersonasFilas", lista);
         }
+
+        // 👥 VER PERSONAS INACTIVAS
+        public async Task<IActionResult> Inactivos()
+        {
+            var inactivos = await _context.EnfPersonas
+                .Where(p => !p.Activo)
+                .OrderBy(p => p.Nombre)
+                .ToListAsync();
+
+            return View(inactivos);
+        }
+
+        // 🔄 REACTIVAR PERSONA
+        [HttpPost]
+        public async Task<IActionResult> Reactivar(int id)
+        {
+            var persona = await _context.EnfPersonas.FindAsync(id);
+            if (persona != null)
+            {
+                persona.Activo = true;
+                _context.Update(persona);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Inactivos));
+        }
+
+        // 👁️ DETALLES
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -67,6 +92,83 @@ namespace Enfermeria_app.Controllers
             return View(enfPersona);
         }
 
+        // ➕ CREAR PERSONA
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(EnfPersona model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            if (_context.EnfPersonas.Any(p => p.Cedula == model.Cedula))
+            {
+                ViewBag.Error = "La cédula ya está registrada.";
+                return View(model);
+            }
+
+            if (_context.EnfPersonas.Any(p => p.Email == model.Email))
+            {
+                ViewBag.Error = "El correo ya está registrado.";
+                return View(model);
+            }
+
+            if (_context.EnfPersonas.Any(p => p.Usuario == model.Usuario))
+            {
+                ViewBag.Error = "El usuario ya existe.";
+                return View(model);
+            }
+
+            _context.EnfPersonas.Add(model);
+            await _context.SaveChangesAsync();
+
+            TempData["Mensaje"] = "✅ Persona registrada correctamente.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ✏️ EDITAR PERSONA
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var enfPersona = await _context.EnfPersonas.FindAsync(id);
+            if (enfPersona == null) return NotFound();
+
+            return View(enfPersona);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, EnfPersona enfPersona)
+        {
+            if (id != enfPersona.Id) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(enfPersona);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.EnfPersonas.Any(e => e.Id == enfPersona.Id))
+                        return NotFound();
+                    else
+                        throw;
+                }
+                TempData["Mensaje"] = "✅ Cambios guardados correctamente.";
+                return RedirectToAction(nameof(Index));
+            }
+            return View(enfPersona);
+        }
+
+        // ❌ DESACTIVAR PERSONA
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -78,6 +180,7 @@ namespace Enfermeria_app.Controllers
 
             return View(enfPersona);
         }
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -90,26 +193,26 @@ namespace Enfermeria_app.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            TempData["Mensaje"] = "⚠️ Persona desactivada correctamente.";
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpGet]
+        // 🚨 CREAR CITA DE EMERGENCIA
+        [HttpPost]
         public async Task<IActionResult> CitaEmergencia(int id)
         {
             var persona = await _context.EnfPersonas.FindAsync(id);
             if (persona == null)
-                return NotFound();
+                return Json(new { success = false, message = "Persona no encontrada." });
 
-            // Hora actual
             var ahora = DateTime.Now;
             var fechaHoy = DateOnly.FromDateTime(ahora);
             var horaActual = TimeOnly.FromDateTime(ahora);
 
-            // Buscar si ya hay horario para hoy en esa hora exacta
+            // Buscar o crear horario
             var horario = await _context.EnfHorarios
                 .FirstOrDefaultAsync(h => h.Fecha == fechaHoy && h.Hora == horaActual);
 
-            // Si no existe, crear uno nuevo
             if (horario == null)
             {
                 horario = new EnfHorario
@@ -123,27 +226,25 @@ namespace Enfermeria_app.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // Crear cita con estado "Creada" (válido según tu restricción CHECK)
+            // Crear cita válida
             var cita = new EnfCita
             {
                 IdPersona = persona.Id,
                 IdHorario = horario.Id,
                 FechaCreacion = ahora,
-                Estado = "Creada", // ✅ Valor permitido
-                HoraLlegada = TimeOnly.FromDateTime(ahora),
-                UsuarioCreacion = "Emergencia" // 👈 indicamos que fue cita de emergencia
+                Estado = "Creada",
+                HoraLlegada = horaActual,
+                UsuarioCreacion = "Emergencia"
             };
 
             _context.EnfCitas.Add(cita);
             await _context.SaveChangesAsync();
 
-            TempData["Mensaje"] = $"✅ Se ha registrado una cita de emergencia para {persona.Nombre} a las {horaActual}.";
-
-            // En lugar de redirigir, devolvemos un mensaje JSON para mostrarlo sin recargar la página
-            return Json(new { success = true, message = $"Cita de emergencia creada para {persona.Nombre}" });
+            return Json(new
+            {
+                success = true,
+                message = $"✅ Cita de emergencia creada para {persona.Nombre} a las {horaActual:HH:mm}."
+            });
         }
-
-
-
     }
 }
