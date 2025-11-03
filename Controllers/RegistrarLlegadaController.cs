@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -14,17 +15,18 @@ namespace Enfermeria_app.Controllers
         private readonly EnfermeriaContext _context;
 
         public RegistrarLlegadaController(EnfermeriaContext context)
-
         {
             _context = context;
         }
 
+        // ✅ Verifica si el usuario es Asistente o Doctor
         bool EsPersonalAutorizado()
         {
             var tipo = User?.Claims?.FirstOrDefault(c => c.Type == "TipoUsuario")?.Value;
             return tipo == "Asistente" || tipo == "Doctor";
         }
 
+        // ✅ Normaliza teléfono CR
         string NormalizarCR(string? tel)
         {
             if (string.IsNullOrWhiteSpace(tel)) return "";
@@ -34,18 +36,38 @@ namespace Enfermeria_app.Controllers
             return $"+506{digits}";
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Index()
+        // ✅ Convierte fechas seguras
+        DateOnly? ParseDate(string? v)
         {
-            if (!EsPersonalAutorizado()) return RedirectToAction("AccesoDenegado", "Cuenta");
+            if (string.IsNullOrWhiteSpace(v)) return null;
+            if (DateOnly.TryParse(v, out var d)) return d;
+            if (DateOnly.TryParseExact(v, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out d)) return d;
+            if (DateOnly.TryParseExact(v, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out d)) return d;
+            return null;
+        }
 
-            var hoy = DateOnly.FromDateTime(DateTime.Today);
+        // ✅ INDEX: muestra solo citas registradas y permite filtrar por rango
+        [HttpGet]
+        public async Task<IActionResult> Index(string? desde = null, string? hasta = null)
+        {
+            if (!EsPersonalAutorizado())
+                return RedirectToAction("AccesoDenegado", "Cuenta");
+
+            var d1 = ParseDate(desde) ?? DateOnly.FromDateTime(DateTime.Today);
+            var d2 = ParseDate(hasta) ?? DateOnly.FromDateTime(DateTime.Today);
 
             var citas = await _context.EnfCitas
                 .Include(c => c.IdPersonaNavigation)
                 .Include(c => c.IdHorarioNavigation)
-                .Where(c => c.IdHorarioNavigation != null && c.IdHorarioNavigation.Fecha == hoy)
-                .OrderBy(c => c.IdHorarioNavigation!.Hora)
+                .Where(c =>
+                    c.IdHorarioNavigation != null &&
+                    c.IdHorarioNavigation.Fecha >= d1 &&
+                    c.IdHorarioNavigation.Fecha <= d2 &&
+                    c.IdPersonaNavigation != null &&
+                    !string.IsNullOrWhiteSpace(c.IdPersonaNavigation.Nombre)
+                )
+                .OrderBy(c => c.IdHorarioNavigation!.Fecha)
+                .ThenBy(c => c.IdHorarioNavigation!.Hora)
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -57,14 +79,19 @@ namespace Enfermeria_app.Controllers
                 .ToListAsync();
 
             ViewBag.Profesores = profesores;
+            ViewBag.Desde = d1.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
+            ViewBag.Hasta = d2.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
+
             return View("Index", citas);
         }
 
+        // ✅ AJAX - Registrar llegada
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LlegadaAjax(int id, string? mensaje, int idProfesor)
         {
-            if (!EsPersonalAutorizado()) return Json(new { ok = false, msg = "Acceso denegado." });
+            if (!EsPersonalAutorizado())
+                return Json(new { ok = false, msg = "Acceso denegado." });
 
             var cita = await _context.EnfCitas
                 .Include(c => c.IdPersonaNavigation)
@@ -96,18 +123,21 @@ namespace Enfermeria_app.Controllers
             return Json(new { ok = true, hora = ahora.ToString("HH:mm"), waUrl = url });
         }
 
+        // ✅ AJAX - Registrar salida
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SalidaAjax(int id, string mensaje, int idProfesor)
         {
-            if (!EsPersonalAutorizado()) return Json(new { ok = false, msg = "Acceso denegado." });
+            if (!EsPersonalAutorizado())
+                return Json(new { ok = false, msg = "Acceso denegado." });
 
             var cita = await _context.EnfCitas
                 .Include(c => c.IdPersonaNavigation)
                 .Include(c => c.IdHorarioNavigation)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
-            if (cita == null) return Json(new { ok = false, msg = "Cita no encontrada." });
+            if (cita == null)
+                return Json(new { ok = false, msg = "Cita no encontrada." });
 
             var profesor = await _context.EnfPersonas.FirstOrDefaultAsync(p => p.Id == idProfesor && p.Tipo == "Profesor");
             if (profesor == null || string.IsNullOrWhiteSpace(profesor.Telefono))
@@ -117,12 +147,12 @@ namespace Enfermeria_app.Controllers
                 return Json(new { ok = false, msg = "El diagnóstico es obligatorio." });
 
             var llegadaDb = await _context.EnfCitas
-    .Where(c => c.Id == id)
-    .Select(c => new { c.HoraLlegada }) // Wrap the nullable value type in an anonymous object
-    .AsNoTracking() // Now `AsNoTracking` is valid because the query returns a reference type (anonymous object)
-    .FirstOrDefaultAsync();
+                .Where(c => c.Id == id)
+                .Select(c => new { c.HoraLlegada })
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
 
-            if (llegadaDb == null || llegadaDb.HoraLlegada == null) // Access the `HoraLlegada` property from the anonymous object
+            if (llegadaDb == null || llegadaDb.HoraLlegada == null)
             {
                 var fix = TimeOnly.FromDateTime(DateTime.Now);
                 cita.HoraLlegada = fix;

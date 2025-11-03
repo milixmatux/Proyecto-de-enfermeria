@@ -58,8 +58,11 @@ namespace Enfermeria_app.Controllers
 
 
             q = q.Where(c => c.IdHorarioNavigation != null &&
-                             c.IdHorarioNavigation.Fecha >= d1 &&
-                             c.IdHorarioNavigation.Fecha <= d2);
+                 c.IdHorarioNavigation.Fecha >= d1 &&
+                 c.IdHorarioNavigation.Fecha <= d2 &&
+                 c.IdPersonaNavigation != null &&                // tiene persona asignada
+                 !string.IsNullOrEmpty(c.IdPersonaNavigation.Nombre) && // el nombre no está vacío
+                 (c.Estado != null && c.Estado != "" && c.Estado != "Pendiente")); // y tiene estado válido
 
             var data = await q.OrderBy(c => c.IdHorarioNavigation!.Fecha)
                               .ThenBy(c => c.IdHorarioNavigation!.Hora)
