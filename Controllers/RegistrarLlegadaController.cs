@@ -98,7 +98,8 @@ namespace Enfermeria_app.Controllers
                 .Include(c => c.IdHorarioNavigation)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
-            if (cita == null) return Json(new { ok = false, msg = "Cita no encontrada." });
+            if (cita == null)
+                return Json(new { ok = false, msg = "Cita no encontrada." });
 
             var profesor = await _context.EnfPersonas.FirstOrDefaultAsync(p => p.Id == idProfesor && p.Tipo == "Profesor");
             if (profesor == null || string.IsNullOrWhiteSpace(profesor.Telefono))
@@ -110,6 +111,7 @@ namespace Enfermeria_app.Controllers
             var ahora = TimeOnly.FromDateTime(DateTime.Now);
             cita.HoraLlegada = ahora;
             cita.MensajeLlegada = mensaje ?? "";
+            cita.Estado = "Llegada"; // 👈 Actualizamos el estado
             _context.EnfCitas.Update(cita);
             await _context.SaveChangesAsync();
 
@@ -144,19 +146,14 @@ namespace Enfermeria_app.Controllers
                 return Json(new { ok = false, msg = "Profesor inválido o sin teléfono." });
 
             if (string.IsNullOrWhiteSpace(mensaje))
-                return Json(new { ok = false, msg = "El diagnóstico es obligatorio." });
+                return Json(new { ok = false, msg = "El motivo es obligatorio." });
 
-            var llegadaDb = await _context.EnfCitas
-                .Where(c => c.Id == id)
-                .Select(c => new { c.HoraLlegada })
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
-
-            if (llegadaDb == null || llegadaDb.HoraLlegada == null)
+            // si no tiene hora de llegada, se registra automáticamente
+            if (cita.HoraLlegada == null)
             {
-                var fix = TimeOnly.FromDateTime(DateTime.Now);
-                cita.HoraLlegada = fix;
-                if (string.IsNullOrWhiteSpace(cita.MensajeLlegada)) cita.MensajeLlegada = "(auto)";
+                cita.HoraLlegada = TimeOnly.FromDateTime(DateTime.Now);
+                if (string.IsNullOrWhiteSpace(cita.MensajeLlegada))
+                    cita.MensajeLlegada = "(auto)";
             }
 
             if (cita.HoraSalida != null)
@@ -165,16 +162,18 @@ namespace Enfermeria_app.Controllers
             var ahora = TimeOnly.FromDateTime(DateTime.Now);
             cita.HoraSalida = ahora;
             cita.MensajeSalida = mensaje;
+            cita.Estado = "Completada"; // 👈 Actualizamos el estado
             _context.EnfCitas.Update(cita);
             await _context.SaveChangesAsync();
 
             var tel = NormalizarCR(profesor.Telefono);
             var nom = cita.IdPersonaNavigation?.Nombre ?? "estudiante";
             var sec = cita.IdPersonaNavigation?.Seccion ?? "";
-            var texto = Uri.EscapeDataString($"{nom}, estudiante de {sec}, ha salido de la enfermería a las {ahora:HH\\:mm}. Diagnóstico: {mensaje}");
+            var texto = Uri.EscapeDataString($"{nom}, estudiante de {sec}, ha salido de la enfermería a las {ahora:HH\\:mm}. Motivo: {mensaje}");
             var url = $"https://wa.me/{tel}?text={texto}";
 
             return Json(new { ok = true, hora = ahora.ToString("HH:mm"), waUrl = url });
         }
+
     }
 }

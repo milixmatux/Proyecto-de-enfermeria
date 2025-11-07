@@ -5,116 +5,74 @@
     ViewData["Title"] = "Comprobantes de Citas";
     var desde = ViewBag.Desde as string ?? DateTime.Today.ToString("yyyy-MM-dd");
     var hasta = ViewBag.Hasta as string ?? DateTime.Today.ToString("yyyy-MM-dd");
+    var nombre = ViewBag.Nombre as string ?? "";
 }
 
-<div class="container mt-4">
-    <h2 class="mb-3 text-center">@ViewData["Title"]</h2>
+<div class="container-fluid px-3">
+    <h2 class="mb-4">@ViewData["Title"]</h2>
 
-    <!-- 🔎 Filtros de fecha -->
-    <form method="get" asp-action="Index" class="row g-2 g-md-3 align-items-end mb-3">
+    <form id="formFiltros" class="row g-2 align-items-end mb-3">
         <div class="col-6 col-md-3">
-            <label class="form-label fw-semibold">Desde</label>
-            <input type="date" name="desde" class="form-control" value="@desde" />
+            <label for="desde" class="form-label">Desde:</label>
+            <input type="date" class="form-control" id="desde" name="desde" value="@desde" />
         </div>
         <div class="col-6 col-md-3">
-            <label class="form-label fw-semibold">Hasta</label>
-            <input type="date" name="hasta" class="form-control" value="@hasta" />
+            <label for="hasta" class="form-label">Hasta:</label>
+            <input type="date" class="form-control" id="hasta" name="hasta" value="@hasta" />
         </div>
-
-        <div class="col-12 col-md-auto">
-            <button class="btn btn-primary w-100">
-                <i class="bi bi-filter-circle"></i> Filtrar
-            </button>
+        <div class="col-12 col-md-4">
+            <label for="nombre" class="form-label">Buscar por nombre o cédula:</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" value="@nombre" placeholder="Buscar por nombre o cédula..." />
         </div>
-
-        <div class="col-12 col-md-auto">
-            <a class="btn btn-outline-secondary w-100"
-               asp-action="DescargarRango"
-               asp-route-desde="@desde"
-               asp-route-hasta="@hasta">
-                <i class="bi bi-download"></i> PDF (rango)
-            </a>
+        <div class="col-12 col-md-2 text-md-end">
+            <button type="submit" class="btn btn-primary w-100 mt-2">Filtrar</button>
         </div>
     </form>
 
-    <!-- 🔔 Mensaje si no hay citas -->
-    @if (!Model.Any())
-    {
-        <div class="alert alert-info text-center">
-            No hay citas registradas en el rango seleccionado.
-        </div>
-    }
-    else
-    {
-        <!-- 📋 Tabla responsiva -->
-        <div class="table-responsive">
-            <table class="table table-striped align-middle text-center">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Hora</th>
-                        <th>Nombre</th>
-                        <th>Cédula</th>
-                        <th>Estado</th>
-                        <th>Llegada</th>
-                        <th>Salida</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var c in Model)
-                    {
-                        <tr>
-                            <td>@c.IdHorarioNavigation?.Fecha.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy")</td>
-                            <td>@c.IdHorarioNavigation?.Hora.ToString("HH\\:mm")</td>
-                            <td class="text-break">@c.IdPersonaNavigation?.Nombre</td>
-                            <td>@c.IdPersonaNavigation?.Cedula</td>
-                            <td>
-                                <span class="badge bg-@(c.Estado == "Atendida" ? "success" :
-                                                                                            c.Estado == "Cancelada" ? "danger" :
-                                                                                            "secondary")">
-                            @c.Estado
-                        </span>
-                    </td>
-                    <td>@(c.HoraLlegada?.ToString("HH\\:mm") ?? "-")</td>
-                    <td>@(c.HoraSalida?.ToString("HH\\:mm") ?? "-")</td>
-                    <td>
-                        <a class="btn btn-sm btn-outline-primary w-100 w-md-auto"
-                           asp-action="Descargar"
-                           asp-route-id="@c.Id">
-                            <i class="bi bi-file-earmark-arrow-down"></i> PDF
-                        </a>
-                    </td>
-                </tr>
-                                }
-                </tbody>
-            </table>
-        </div>
-    }
+    <div id="tablaContainer">
+        @await Html.PartialAsync("_TablaComprobantes", Model)
+    </div>
 </div>
 
-@section Styles {
-    <style>
-        /* 📱 Estilos responsivos */
-        @@media (max-width: 768px) {
-            h2 {
-                font-size: 1.25rem;
-            }
+@section Scripts {
+    <script>
+        const form = document.getElementById('formFiltros');
+        const tablaContainer = document.getElementById('tablaContainer');
+        const nombreInput = document.getElementById('nombre');
 
-            table th, table td {
-                font-size: 0.85rem;
-                white-space: nowrap;
-            }
+        // Filtrar manualmente
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+            await cargarTabla();
+        });
 
-            .btn {
-                font-size: 0.8rem;
-                padding: 0.35rem 0.6rem;
-            }
+        // Filtro en tiempo real (al escribir)
+        let timer;
+        nombreInput.addEventListener('input', () => {
+            clearTimeout(timer);
+            timer = setTimeout(cargarTabla, 400);
+        });
 
-            .table-responsive {
-                overflow-x: auto;
+        async function cargarTabla() {
+            const desde = document.getElementById('desde').value;
+            const hasta = document.getElementById('hasta').value;
+            const nombre = document.getElementById('nombre').value;
+
+            const params = new URLSearchParams();
+            if (desde) params.append('desde', desde);
+            if (hasta) params.append('hasta', hasta);
+            if (nombre) params.append('nombre', nombre);
+
+            const url = '@Url.Action("Index", "Comprobantes")' + '?' + params.toString();
+
+            try {
+                const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const html = await response.text();
+                tablaContainer.innerHTML = html;
+            } catch (err) {
+                console.error(err);
+                tablaContainer.innerHTML = '<div class="alert alert-danger">Error al cargar los datos.</div>';
             }
         }
-    </style>
+    </script>
 }
-

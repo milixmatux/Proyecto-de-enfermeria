@@ -24,7 +24,7 @@ else
                 <th>Sección</th>
                 <th>Hora llegada</th>
                 <th>Hora salida</th>
-                <th>Observaciones / Diagnóstico</th>
+                <th>Observaciones / Motivo</th>
             </tr>
         </thead>
         <tbody>
@@ -70,7 +70,7 @@ else
                                         <option value="@p.Id">@p.Nombre</option>
                                     }
                                 </select>
-                                <input id="diagS-@id" class="form-control" placeholder="Diagnóstico" style="max-width: 260px;" @(llego ? "" : "disabled") />
+                                <input id="diagS-@id" class="form-control" placeholder="Motivo" style="max-width: 260px;" @(llego ? "" : "disabled") />
                                 <button type="button" class="btn btn-success" onclick="onSalida(@id)" @(llego ? "" : "disabled")>@WaIcon() Registrar salida</button>
                             </div>
                             <div class="text-danger small mt-1" id="errS-@id"></div>
@@ -157,7 +157,7 @@ else
 
             const idProfesor = selProf?.value || '';
             if (!idProfesor) { err.textContent = 'Selecciona un profesor.'; return; }
-            if (!diag?.value?.trim()) { err.textContent = 'El diagnóstico es obligatorio.'; return; }
+            if (!diag?.value?.trim()) { err.textContent = 'El motivo es obligatorio.'; return; }
 
             const body = new URLSearchParams();
             body.set('__RequestVerificationToken', token());

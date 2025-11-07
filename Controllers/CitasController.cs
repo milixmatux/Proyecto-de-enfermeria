@@ -96,7 +96,7 @@ namespace Enfermeria_app.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["Mensaje"] = "Cita creada correctamente.";
+            TempData["Mensaje"] = "Cita crada correctamente, porfavor presentarse 5 munutos antes";
             return RedirectToAction(nameof(Sacar), new { fecha = horario.Fecha });
         }
 

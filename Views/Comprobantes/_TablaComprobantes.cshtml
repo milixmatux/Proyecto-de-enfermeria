@@ -1,0 +1,62 @@
+﻿@model IEnumerable<Enfermeria_app.Models.EnfCita>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No hay comprobantes de citas reservadas para los filtros seleccionados.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Nombre</th>
+                    <th>Sección</th>
+                    <th>Estado</th>
+                    <th>Observaciones / Diagnóstico</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td>@c.IdHorarioNavigation?.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td>@c.IdHorarioNavigation?.Hora.ToString("HH\\:mm")</td>
+                        <td>@c.IdPersonaNavigation?.Nombre</td>
+                        <td>@c.IdPersonaNavigation?.Seccion</td>
+                        <td>
+                            @switch (c.Estado)
+                            {
+                                case "Creada":
+                                    <span class="badge bg-secondary">Creada</span>
+                                    ; break;
+                                case "Llegada":
+                                    <span class="badge bg-info text-dark">Llegada</span>
+                                    ; break;
+                                case "Completada":
+                                    <span class="badge bg-success">Completada</span>
+                                    ; break;
+                                case "Cancelada":
+                                    <span class="badge bg-danger">Cancelada</span>
+                                    ; break;
+                                default:
+                                    <span class="badge bg-light text-dark">@c.Estado</span>
+                                    ; break;
+                            }
+                        </td>
+                        <td class="text-start">
+                            @{
+                                var msg = !string.IsNullOrWhiteSpace(c.MensajeSalida)
+                                ? c.MensajeSalida
+                                : (!string.IsNullOrWhiteSpace(c.MensajeLlegada) ? c.MensajeLlegada : "-");
+                            }
+                            @msg
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
