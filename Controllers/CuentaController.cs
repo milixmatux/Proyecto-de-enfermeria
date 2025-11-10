@@ -1,59 +1,28 @@
-﻿using BCrypt.Net;
-using Enfermeria_app.Models;
+﻿using Enfermeria_app.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace Enfermeria_app.Controllers
 {
     [AllowAnonymous]
-
-
     public class CuentaController : Controller
     {
         private readonly EnfermeriaContext _context;
 
-        // Constructor
         public CuentaController(EnfermeriaContext context)
         {
             _context = context;
-
-            // ⚠️ Método temporal: ejecutar una sola vez para convertir contraseñas existentes
-            //HashearPasswordsExistentes();
         }
-
-        // =========================
-        // Método temporal para convertir contraseñas existentes a hash
-        private void HashearPasswordsExistentes()
-        {
-            var usuarios = _context.EnfPersonas.ToList();
-
-            foreach (var user in usuarios)
-            {
-                // Solo actualizar si la contraseña no está hasheada
-                if (!user.Password.StartsWith("$2a$"))
-                {
-                    user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
-                }
-            }
-
-            _context.SaveChanges();
-            Console.WriteLine("Contraseñas existentes convertidas a hash BCrypt correctamente.");
-        }
-
-        // =========================
-        // ACCESO DENEGADO
-        public IActionResult AccesoDenegado() => View();
 
         // =========================
         // LOGIN
+        // =========================
         [HttpGet]
-        public IActionResult Login()
-        {
-            return View();
-        }
+        public IActionResult Login() => View();
 
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model)
@@ -61,10 +30,19 @@ namespace Enfermeria_app.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Buscar el usuario por nombre
             var user = _context.EnfPersonas.FirstOrDefault(u => u.Usuario == model.Usuario);
+            if (user == null)
+            {
+                ViewBag.Error = "Usuario o contraseña incorrectos.";
+                return View(model);
+            }
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(model.Contraseña, user.Password))
+            // Verificar contraseña (hash o texto plano)
+            bool passwordValida =
+                (user.Password == model.Contraseña) ||
+                BCrypt.Net.BCrypt.Verify(model.Contraseña, user.Password);
+
+            if (!passwordValida)
             {
                 ViewBag.Error = "Usuario o contraseña incorrectos.";
                 return View(model);
@@ -76,44 +54,35 @@ namespace Enfermeria_app.Controllers
                 return View(model);
             }
 
-            // Guardar tipo de usuario en sesión
+            // Guardar sesión
             HttpContext.Session.SetString("Usuario", user.Usuario);
+            HttpContext.Session.SetString("NombreCompleto", user.Nombre ?? user.Usuario);
             HttpContext.Session.SetString("TipoUsuario", user.Tipo);
             HttpContext.Session.SetString("Departamento", user.Departamento ?? "");
 
 
-            // Crear Claims
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Usuario),
-                new Claim("TipoUsuario", user.Tipo),
-                new Claim("Nombre", user.Nombre),
-                new Claim("Departamento", user.Departamento ?? "")
-
-
+                new Claim("TipoUsuario", user.Tipo)
             };
 
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var claimsPrincipal = new ClaimsPrincipal(identity);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, new AuthenticationProperties { IsPersistent = true });
 
-            var authProperties = new AuthenticationProperties
-            {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30)
-            };
-
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties);
+            // Si la contraseña es la predeterminada, redirigir al cambio de contraseña
+            if (model.Contraseña == "agro2025")
+                return RedirectToAction("CambiarPassword", new { usuario = user.Usuario });
 
             return RedirectToAction("Inicio", "Inicio");
         }
 
         // =========================
         // REGISTRO
+        // =========================
         [HttpGet]
-        public IActionResult Registro()
-        {
-            return View();
-        }
+        public IActionResult Registro() => View();
 
         [HttpPost]
         public async Task<IActionResult> Registro(RegistroViewModel model)
@@ -121,30 +90,16 @@ namespace Enfermeria_app.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Validaciones
-            if (_context.EnfPersonas.Any(u => u.Cedula == model.Cedula))
-            {
-                ViewBag.Error = "La cédula ya está registrada.";
-                return View(model);
-            }
-
-            if (_context.EnfPersonas.Any(u => u.Nombre == model.Nombre))
-            {
-                ViewBag.Error = "El nombre ya está registrado.";
-                return View(model);
-            }
-
-            if (_context.EnfPersonas.Any(u => u.Email == model.Email))
-            {
-                ViewBag.Error = "El correo ya está registrado.";
-                return View(model);
-            }
-
             if (_context.EnfPersonas.Any(u => u.Usuario == model.Usuario))
             {
                 ViewBag.Error = "El usuario ya existe.";
                 return View(model);
             }
+
+            // Guardar contraseña en texto plano si es agro2025, de lo contrario con hash
+            string password = model.Password == "agro2025"
+                ? model.Password
+                : BCrypt.Net.BCrypt.HashPassword(model.Password);
 
             var nuevaPersona = new EnfPersona
             {
@@ -153,7 +108,7 @@ namespace Enfermeria_app.Controllers
                 Telefono = model.Telefono,
                 Email = model.Email,
                 Usuario = model.Usuario,
-                Password = BCrypt.Net.BCrypt.HashPassword(model.Password),
+                Password = password,
                 Departamento = model.Departamento,
                 Tipo = model.Tipo,
                 Seccion = model.Seccion,
@@ -169,13 +124,83 @@ namespace Enfermeria_app.Controllers
         }
 
         // =========================
+        // CAMBIAR PASSWORD
+        // =========================
+        [Authorize]
+        [HttpGet]
+        public IActionResult CambiarPassword(string? usuario = null)
+        {
+            usuario ??= User?.Identity?.Name;
+            if (usuario == null) return RedirectToAction("Login");
+
+            ViewBag.Usuario = usuario;
+            return View();
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CambiarPassword(string usuario, string passwordActual, string nuevaPassword, string confirmarPassword)
+        {
+            var user = _context.EnfPersonas.FirstOrDefault(u => u.Usuario == usuario);
+            if (user == null)
+            {
+                ViewBag.Error = "Usuario no encontrado.";
+                return View();
+            }
+
+            // Validar la contraseña actual
+            bool passwordValida =
+                (user.Password == passwordActual) ||
+                BCrypt.Net.BCrypt.Verify(passwordActual, user.Password);
+
+            if (!passwordValida)
+            {
+                ViewBag.Error = "La contraseña actual es incorrecta.";
+                ViewBag.Usuario = usuario;
+                return View();
+            }
+
+            // Validar que cumpla los requisitos
+            if (!EsPasswordSegura(nuevaPassword))
+            {
+                ViewBag.Error = "La nueva contraseña no cumple con los requisitos.";
+                ViewBag.Usuario = usuario;
+                return View();
+            }
+
+            if (nuevaPassword != confirmarPassword)
+            {
+                ViewBag.Error = "Las contraseñas no coinciden.";
+                ViewBag.Usuario = usuario;
+                return View();
+            }
+
+            // Guardar con hash
+            user.Password = BCrypt.Net.BCrypt.HashPassword(nuevaPassword);
+            _context.EnfPersonas.Update(user);
+            await _context.SaveChangesAsync();
+
+            // 🔁 Redirigir al inicio después del cambio exitoso
+            TempData["Mensaje"] = "Contraseña actualizada correctamente.";
+            return RedirectToAction("Inicio", "Inicio");
+        }
+
+        private bool EsPasswordSegura(string password)
+        {
+            // Al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo
+            var regex = new Regex(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$");
+            return regex.IsMatch(password);
+        }
+
+        // =========================
         // CERRAR SESIÓN
+        // =========================
         [HttpPost]
         public async Task<IActionResult> CerrarSesion()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             HttpContext.Session.Clear();
-
             return RedirectToAction("Login", "Cuenta");
         }
     }
