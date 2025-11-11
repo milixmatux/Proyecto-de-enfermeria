@@ -4,55 +4,96 @@
     ViewData["Title"] = "Mi Historial de Citas";
 }
 
-<h2>Mi Historial de Citas</h2>
+<div class="container py-3">
+    <h2 class="mb-3">@ViewData["Title"]</h2>
 
-@if (!Model.Any())
-{
-    <br>
-    <p>No tienes citas registradas.</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Horario</th>
-                <th>Llegada</th>
-                <th>Salida</th>
-                <th>Estado</th>
-                <th>Fecha</th>
-                <th>Acciones</th> <!-- 🔹 NUEVA COLUMNA -->
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var cita in Model)
-            {
-                <tr>
-                    <td>@(cita.IdHorarioNavigation?.Fecha.ToString("dd/MM/yyyy") ?? "") a las @(cita.IdHorarioNavigation?.Hora.ToString() ?? "")</td>
-                    <td>@(cita.HoraLlegada?.ToString() ?? "N/A")</td>
-                    <td>@(cita.HoraSalida?.ToString() ?? "N/A")</td>
-                    <td>@cita.Estado</td>
-                    <td>@cita.FechaCreacion.ToString("dd/MM/yyyy")</td>
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">No tienes citas registradas.</div>
+    }
+    else
+    {
+        <!-- Tabla (para pantallas grandes) -->
+        <div class="table-responsive d-none d-md-block">
+            <table class="table table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Horario</th>
+                        <th>Llegada</th>
+                        <th>Salida</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cita in Model)
+                    {
+                        <tr>
+                            <td>@(cita.IdHorarioNavigation?.Fecha.ToString("dd/MM/yyyy") ?? "") a las @(cita.IdHorarioNavigation?.Hora.ToString() ?? "")</td>
+                            <td>@(cita.HoraLlegada?.ToString() ?? "N/A")</td>
+                            <td>@(cita.HoraSalida?.ToString() ?? "N/A")</td>
+                            <td>
+                                <span class="badge @(cita.Estado=="Completada" ? "bg-success" : cita.Estado=="Cancelada" ? "bg-danger" : cita.Estado=="Llegada" ? "bg-info text-dark":"bg-secondary")">
+                                    @cita.Estado
+                                </span>
+                            </td>
+                            <td>@cita.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                            <td class="text-end">
+                                @if (cita.Estado == "Creada" && cita.IdHorarioNavigation?.Fecha == DateOnly.FromDateTime(DateTime.Today))
+                                {
+                                    <form asp-action="CancelarCita" asp-controller="Citas" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@cita.Id" />
+                                        <button type="submit" class="btn btn-danger btn-sm">Cancelar</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">N/A</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
-                    <!-- 🔹 NUEVA CELDA CON EL BOTÓN -->
-                    <td class="text-end">
-                        @if (cita.Estado == "Creada" && cita.IdHorarioNavigation.Fecha == DateOnly.FromDateTime(DateTime.Today))
-                        {
-                            <form asp-action="CancelarCita" asp-controller="Citas" method="post" style="display:inline;">
-                                <input type="hidden" name="id" value="@cita.Id" />
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de cancelar esta cita?');">
-                                    Cancelar
-                                </button>
-                            </form>
-                        }
-                        else
-                        {
-                            <span class="text-muted">N/A</span>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+        <!-- Tarjetas (para móviles) -->
+        <div class="d-md-none">
+            <div class="row g-2">
+                @foreach (var cita in Model)
+                {
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold">@cita.IdHorarioNavigation?.Fecha.ToString("dd/MM/yyyy")</div>
+                                        <div class="small text-muted">Hora: @cita.IdHorarioNavigation?.Hora.ToString()</div>
+                                    </div>
+                                    <span class="badge @(cita.Estado=="Completada" ? "bg-success" : cita.Estado=="Cancelada" ? "bg-danger" : cita.Estado=="Llegada" ? "bg-info text-dark":"bg-secondary")">
+                                        @cita.Estado
+                                    </span>
+                                </div>
+                                <hr class="my-2" />
+                                <div class="small"><strong>Llegada:</strong> @cita.HoraLlegada?.ToString() ?? "N/A"</div>
+                                <div class="small"><strong>Salida:</strong> @cita.HoraSalida?.ToString() ?? "N/A"</div>
+                                <div class="small"><strong>Fecha:</strong> @cita.FechaCreacion.ToString("dd/MM/yyyy")</div>
 
-}
+                                <div class="mt-2 text-end">
+                                    @if (cita.Estado == "Creada" && cita.IdHorarioNavigation?.Fecha == DateOnly.FromDateTime(DateTime.Today))
+                                    {
+                                        <form asp-action="CancelarCita" asp-controller="Citas" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@cita.Id" />
+                                            <button type="submit" class="btn btn-sm btn-danger">Cancelar</button>
+                                        </form>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>

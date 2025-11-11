@@ -18,34 +18,63 @@ namespace Enfermeria_app.Controllers
             _context = context;
         }
 
+        // ✅ Método auxiliar para obtener el tipo de usuario actual
+        private string ObtenerTipoUsuario()
+        {
+            return User?.Claims?.FirstOrDefault(c => c.Type == "TipoUsuario")?.Value ?? "";
+        }
+
+        // ✅ Método auxiliar para obtener el nombre de usuario actual
+        private string ObtenerUsuario()
+        {
+            return User?.Identity?.Name ?? "";
+        }
+
         [HttpGet]
         public async Task<IActionResult> Index(DateTime? desde, DateTime? hasta, string? nombre)
         {
-            // 🔹 Si no se envían fechas, usar la de hoy por defecto
             var hoy = DateOnly.FromDateTime(DateTime.Today);
             var fechaDesde = desde.HasValue ? DateOnly.FromDateTime(desde.Value) : hoy;
             var fechaHasta = hasta.HasValue ? DateOnly.FromDateTime(hasta.Value) : hoy;
+
+            var tipoUsuario = ObtenerTipoUsuario();
+            var usuario = ObtenerUsuario();
 
             var query = _context.EnfCitas
                 .Include(c => c.IdPersonaNavigation)
                 .Include(c => c.IdHorarioNavigation)
                 .AsQueryable();
 
-            // 🔹 Solo citas reservadas (tienen persona asignada)
-            query = query.Where(c => c.IdPersonaNavigation != null && c.IdPersonaNavigation.Nombre != null);
+            // ✅ Solo citas reservadas (que tengan persona asignada)
+            query = query.Where(c => c.IdPersonaNavigation != null);
 
-            // 🔹 Filtrar por rango de fechas
-            query = query.Where(c => c.IdHorarioNavigation != null &&
-                                     c.IdHorarioNavigation.Fecha >= fechaDesde &&
-                                     c.IdHorarioNavigation.Fecha <= fechaHasta);
+            // ✅ Filtrar por rango de fechas
+            query = query.Where(c =>
+                c.IdHorarioNavigation != null &&
+                c.IdHorarioNavigation.Fecha >= fechaDesde &&
+                c.IdHorarioNavigation.Fecha <= fechaHasta);
 
-            // 🔹 Filtro por nombre o cédula
-            if (!string.IsNullOrWhiteSpace(nombre))
+            // ✅ Si es estudiante → solo sus propias citas
+            if (tipoUsuario == "Estudiante")
             {
-                nombre = nombre.Trim().ToLower();
-                query = query.Where(c =>
-                    (c.IdPersonaNavigation!.Nombre.ToLower().Contains(nombre)) ||
-                    (c.IdPersonaNavigation!.Cedula.ToLower().Contains(nombre)));
+                var persona = await _context.EnfPersonas
+                    .FirstOrDefaultAsync(p => p.Usuario == usuario);
+
+                if (persona != null)
+                    query = query.Where(c => c.IdPersona == persona.Id);
+                else
+                    query = query.Where(c => false); // No muestra nada
+            }
+            else
+            {
+                // ✅ Si es asistente o doctor → puede filtrar por nombre o cédula
+                if (!string.IsNullOrWhiteSpace(nombre))
+                {
+                    nombre = nombre.Trim().ToLower();
+                    query = query.Where(c =>
+                        (c.IdPersonaNavigation!.Nombre.ToLower().Contains(nombre)) ||
+                        (c.IdPersonaNavigation!.Cedula.ToLower().Contains(nombre)));
+                }
             }
 
             var citas = await query
@@ -54,11 +83,13 @@ namespace Enfermeria_app.Controllers
                 .AsNoTracking()
                 .ToListAsync();
 
+            // 🔹 Enviar datos a la vista
             ViewBag.Desde = fechaDesde.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
             ViewBag.Hasta = fechaHasta.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
             ViewBag.Nombre = nombre ?? "";
+            ViewBag.TipoUsuario = tipoUsuario;
 
-            // 🔹 Si la solicitud viene por AJAX (filtro dinámico)
+            // 🔹 Si viene de AJAX (búsqueda en tiempo real)
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                 return PartialView("_TablaComprobantes", citas);
 

@@ -13,73 +13,103 @@
     string fmt(DateOnly d) => d.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
 }
 
-<h2>@ViewData["Title"]</h2>
+<div class="container py-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+        <h2 class="mb-2 mb-md-0">@ViewData["Title"]</h2>
+        <div><strong>Fecha:</strong> @fecha.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy")</div>
+    </div>
 
-@if (TempData["Mensaje"] != null)
-{
-    <div class="alert alert-success">@TempData["Mensaje"]</div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success">@TempData["Mensaje"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
 
-<div class="d-flex align-items-center justify-content-between mb-3">
-    <div><strong>Fecha:</strong> @fecha.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy")</div>
     @if (!fechaSoloHoy)
     {
-        <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary" asp-action="@actionName" asp-route-fecha="@fmt(prev)">←</a>
-            <a class="btn btn-outline-secondary" asp-action="@actionName" asp-route-fecha="@fmt(next)">→</a>
+        <div class="d-flex justify-content-between mb-3">
+            <a class="btn btn-outline-secondary" asp-action="@actionName" asp-route-fecha="@fmt(prev)">← Día anterior</a>
+            <a class="btn btn-outline-secondary" asp-action="@actionName" asp-route-fecha="@fmt(next)">Día siguiente →</a>
+        </div>
+    }
+
+    @if (tipoUsuario == "Profesor")
+    {
+        <button class="btn btn-danger mb-3 w-100 w-md-auto"
+                type="button"
+                data-bs-toggle="modal"
+                data-bs-target="#emergModal">
+            Agendar Emergencia
+        </button>
+    }
+
+    @if (!horarios.Any())
+    {
+        <div class="alert alert-info text-center">No hay horarios disponibles para la fecha seleccionada.</div>
+    }
+    else
+    {
+        <!-- ✅ Versión responsiva -->
+        <div class="table-responsive d-none d-md-block">
+            <table class="table table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Hora</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var h in horarios)
+                    {
+                        <tr>
+                            <td>@h.Hora</td>
+                            <td>@h.Estado</td>
+                            <td class="text-end">
+                                <form asp-action="@actionName" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="horarioId" value="@h.Id" />
+                                    <button type="submit" class="btn btn-success btn-sm">Reservar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ✅ Vista tipo “tarjeta” para móviles -->
+        <div class="d-md-none">
+            <div class="row g-2">
+                @foreach (var h in horarios)
+                {
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold">@h.Hora</div>
+                                    <div class="small text-muted">@h.Estado</div>
+                                </div>
+                                <form asp-action="@actionName" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="horarioId" value="@h.Id" />
+                                    <button type="submit" class="btn btn-success btn-sm">Reservar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
     }
 </div>
 
-@if (tipoUsuario == "Profesor")
-{
-    <button class="btn btn-danger mb-3"
-            type="button"
-            data-bs-toggle="modal"
-            data-bs-target="#emergModal">
-        Agendar Emergencia
-    </button>
-}
-
-@if (!horarios.Any())
-{
-    <div class="alert alert-info">No hay horarios disponibles para la fecha seleccionada.</div>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Hora</th>
-                <th>Estado</th>
-                <th class="text-end"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var h in horarios)
-            {
-                <tr>
-                    <td>@h.Hora</td>
-                    <td>@h.Estado</td>
-                    <td class="text-end">
-                        <form asp-action="@actionName" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="horarioId" value="@h.Id" />
-                            <button type="submit" class="btn btn-success">Reservar</button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-
 <form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
 
+<!-- Modal de emergencia -->
 <div class="modal fade" id="emergModal" tabindex="-1" aria-hidden="true" aria-labelledby="emergModalLabel">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -99,75 +129,45 @@ else
 @section Scripts {
     <script>
         (() => {
-          const buscador = document.getElementById('buscador');
-          const lista = document.getElementById('resultados');
-          const msg = document.getElementById('msg');
-          const endpointSearch = '@Url.Action("BuscarEstudiantes", "Citas")';
-          const endpointCreate = '@Url.Action("Emergencia", "Citas")';
-          let t = null;
+            const buscador = document.getElementById('buscador');
+            const lista = document.getElementById('resultados');
+            const msg = document.getElementById('msg');
+            const endpointSearch = '@Url.Action("BuscarEstudiantes", "Citas")';
+            const endpointCreate = '@Url.Action("Emergencia", "Citas")';
+            let t = null;
 
-          const getToken = () => {
-            const el = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
-            return el ? el.value : '';
-          };
+            const getToken = () => document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]')?.value ?? '';
 
-          const renderList = (items) => {
-            lista.innerHTML = '';
-            msg.innerHTML = '';
-            if (!items || items.length === 0) return;
-            for (const it of items) {
-              const li = document.createElement('li');
-              li.className = 'list-group-item list-group-item-action';
-              li.textContent = `${it.nombre} — ${it.cedula}`;
-              li.onclick = async () => {
-                msg.innerHTML = 'Agendando...';
-                const body = new URLSearchParams({ cedula: it.cedula, __RequestVerificationToken: getToken() });
-                const resp = await fetch(endpointCreate, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body });
-                const ct = resp.headers.get('content-type') || '';
-                if (!ct.includes('application/json')) {
-                  const txt = await resp.text();
-                  msg.innerHTML = `<div class="text-danger">✘ Respuesta no JSON.</div>`;
-                  console.error('POST Emergencia no JSON:', txt);
-                  return;
+            const renderList = (items) => {
+                lista.innerHTML = '';
+                msg.innerHTML = '';
+                if (!items || items.length === 0) return;
+                for (const it of items) {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item list-group-item-action';
+                    li.textContent = `${it.nombre} — ${it.cedula}`;
+                    li.onclick = async () => {
+                        msg.innerHTML = 'Agendando...';
+                        const body = new URLSearchParams({ cedula: it.cedula, __RequestVerificationToken: getToken() });
+                        const resp = await fetch(endpointCreate, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body });
+                        const data = await resp.json().catch(() => ({}));
+                        msg.innerHTML = data.ok
+                            ? `<div class="text-success">✔ ${data.msg}</div>`
+                            : `<div class="text-danger">✘ ${data.msg ?? 'Error al agendar.'}</div>`;
+                    };
+                    lista.appendChild(li);
                 }
-                const data = await resp.json();
-                if (data.ok) {
-                  msg.innerHTML = `<div class="text-success">✔ ${data.msg}</div>`;
-                  setTimeout(() => {
-                    const modalEl = document.getElementById('emergModal');
-                    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                    modal.hide();
-                    lista.innerHTML = '';
-                    buscador.value = '';
-                  }, 800);
-                } else {
-                  msg.innerHTML = `<div class="text-danger">✘ ${data.msg}</div>`;
-                }
-              };
-              lista.appendChild(li);
-            }
-          };
+            };
 
-          const buscar = async (q) => {
-            if (!q || q.trim().length < 1) { lista.innerHTML = ''; msg.innerHTML = ''; return; }
-            const url = `${endpointSearch}?q=${encodeURIComponent(q)}`;
-            const r = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-            const ct = r.headers.get('content-type') || '';
-            if (!ct.includes('application/json')) {
-              const txt = await r.text();
-              lista.innerHTML = '';
-              msg.innerHTML = `<div class="text-danger">✘ La búsqueda no devolvió JSON.</div>`;
-              console.error('GET BuscarEstudiantes no JSON:', txt);
-              return;
-            }
-            const data = await r.json();
-            renderList(data);
-          };
+            const buscar = async (q) => {
+                if (!q.trim()) { lista.innerHTML = ''; msg.innerHTML = ''; return; }
+                const r = await fetch(`${endpointSearch}?q=${encodeURIComponent(q)}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const data = await r.json().catch(() => []);
+                renderList(data);
+            };
 
-          buscador?.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => buscar(buscador.value), 200); });
-          const emergModal = document.getElementById('emergModal');
-          emergModal?.addEventListener('shown.bs.modal', () => { buscador.value = ''; lista.innerHTML=''; msg.innerHTML=''; buscador.focus(); });
+            buscador?.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => buscar(buscador.value), 300); });
+            document.getElementById('emergModal')?.addEventListener('shown.bs.modal', () => { buscador.value = ''; lista.innerHTML = ''; msg.innerHTML = ''; buscador.focus(); });
         })();
     </script>
 }
-

@@ -6,30 +6,55 @@
     var desde = ViewBag.Desde as string ?? DateTime.Today.ToString("yyyy-MM-dd");
     var hasta = ViewBag.Hasta as string ?? DateTime.Today.ToString("yyyy-MM-dd");
     var nombre = ViewBag.Nombre as string ?? "";
+    var tipoUsuario = ViewBag.TipoUsuario as string ?? "";
 }
 
 <div class="container-fluid px-3">
     <h2 class="mb-4">@ViewData["Title"]</h2>
 
     <form id="formFiltros" class="row g-2 align-items-end mb-3">
+        <!-- Filtro de fecha desde -->
         <div class="col-6 col-md-3">
             <label for="desde" class="form-label">Desde:</label>
             <input type="date" class="form-control" id="desde" name="desde" value="@desde" />
         </div>
+
+        <!-- Filtro de fecha hasta -->
         <div class="col-6 col-md-3">
             <label for="hasta" class="form-label">Hasta:</label>
             <input type="date" class="form-control" id="hasta" name="hasta" value="@hasta" />
         </div>
-        <div class="col-12 col-md-4">
-            <label for="nombre" class="form-label">Buscar por nombre o cédula:</label>
-            <input type="text" class="form-control" id="nombre" name="nombre" value="@nombre" placeholder="Buscar por nombre o cédula..." />
-        </div>
-        <div class="col-12 col-md-2 text-md-end">
-            <button type="submit" class="btn btn-primary w-100 mt-2">Filtrar</button>
-        </div>
+
+        @* Si es doctor o asistente, mostrar búsqueda por nombre/cédula *@
+        @if (tipoUsuario == "Doctor" || tipoUsuario == "Asistente")
+        {
+            <div class="col-12 col-md-4">
+                <label for="nombre" class="form-label">Buscar por nombre o cédula:</label>
+                <div class="input-group">
+                    <input type="text"
+                           class="form-control"
+                           id="nombre"
+                           name="nombre"
+                           value="@nombre"
+                           placeholder="Buscar por nombre o cédula..." />
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Si es estudiante, solo mostrar el botón de filtrar -->
+            <div class="col-12 col-md-2">
+                <button type="submit" class="btn btn-primary w-100 mt-4">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+            </div>
+        }
     </form>
 
-    <div id="tablaContainer">
+    <div id="tablaContainer" class="table-responsive">
         @await Html.PartialAsync("_TablaComprobantes", Model)
     </div>
 </div>
@@ -40,23 +65,25 @@
         const tablaContainer = document.getElementById('tablaContainer');
         const nombreInput = document.getElementById('nombre');
 
-        // Filtrar manualmente
+        // --- Filtrado manual (botón Filtrar) ---
         form.addEventListener('submit', async e => {
             e.preventDefault();
             await cargarTabla();
         });
 
-        // Filtro en tiempo real (al escribir)
-        let timer;
-        nombreInput.addEventListener('input', () => {
-            clearTimeout(timer);
-            timer = setTimeout(cargarTabla, 400);
-        });
+        // --- Filtro en tiempo real (solo si hay campo de nombre) ---
+        if (nombreInput) {
+            let timer;
+            nombreInput.addEventListener('input', () => {
+                clearTimeout(timer);
+                timer = setTimeout(cargarTabla, 400);
+            });
+        }
 
         async function cargarTabla() {
             const desde = document.getElementById('desde').value;
             const hasta = document.getElementById('hasta').value;
-            const nombre = document.getElementById('nombre').value;
+            const nombre = nombreInput ? nombreInput.value : '';
 
             const params = new URLSearchParams();
             if (desde) params.append('desde', desde);
