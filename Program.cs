@@ -29,11 +29,14 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Profesor", p => p.RequireClaim("TipoUsuario", "Profesor"));
     options.AddPolicy("Estudiante", p => p.RequireClaim("TipoUsuario", "Estudiante"));
+    options.AddPolicy("Administrativo", p =>
+    p.RequireClaim("TipoUsuario", "Administrativo"));
     options.AddPolicy("Funcionario", p => p.RequireClaim("TipoUsuario", "Funcionario"));
     options.AddPolicy("EstudianteFuncionario", p =>
-        p.RequireAssertion(ctx =>
-            ctx.User.HasClaim("TipoUsuario", "Estudiante") ||
-            ctx.User.HasClaim("TipoUsuario", "Funcionario")));
+    p.RequireAssertion(ctx =>
+        ctx.User.HasClaim("TipoUsuario", "Estudiante") ||
+        ctx.User.HasClaim("TipoUsuario", "Funcionario") ||
+        ctx.User.HasClaim("TipoUsuario", "Administrativo")));
     options.AddPolicy("EmergenciaProfesor", p => p.RequireClaim("TipoUsuario", "Profesor"));
     options.AddPolicy("Asistente", p => p.RequireClaim("TipoUsuario", "Asistente"));
 });

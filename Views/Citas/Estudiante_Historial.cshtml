@@ -1,53 +1,90 @@
 ﻿@model IEnumerable<Enfermeria_app.Models.EnfCita>
 
-
 @{
     ViewData["Title"] = "Historial de Estudiantes";
 }
 
-<h2>Historial de Estudiantes</h2>
+<div class="container-fluid px-3">
 
-<form asp-controller="Citas" asp-action="Estudiante_Historial" method="get" class="mb-3">
+    <h2 class="mb-3">@ViewData["Title"]</h2>
 
-    <div class="form-group">
-        <br> 
-        <input type="text" name="filtro" class="form-control" placeholder="Buscar por nombre o cédula" />
-    </div>
-    <br>
-    <button type="submit" class="btn btn-primary">Buscar</button>
-</form>
+    <!-- Filtro -->
+    <form asp-controller="Citas" asp-action="Estudiante_Historial" method="get" class="row g-2 mb-4">
+        <div class="col-12 col-md-8">
+            <input type="text" name="filtro" class="form-control" placeholder="Buscar por nombre o cédula..." />
+        </div>
+        <div class="col-12 col-md-4 text-md-end">
+            <button type="submit" class="btn btn-primary w-100">Buscar</button>
+        </div>
+    </form>
 
-@if (!Model.Any())
-{
-    <p>No se encontraron citas para mostrar.</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Cédula</th>
-                <th>Horario</th>
-                <th>Llegada</th>
-                <th>Salida</th>
-                <th>Estado</th>
-                <th>Fecha</th>
-            </tr>
-        </thead>
-        <tbody>
+    <!-- Si no hay datos -->
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info mt-3">No se encontraron citas para mostrar.</div>
+    }
+    else
+    {
+        <div class="row g-3">
             @foreach (var cita in Model)
             {
-                <tr>
-                    <td>@cita.IdPersonaNavigation.Nombre</td>
-                    <td>@cita.IdPersonaNavigation.Cedula</td>
-                    <td>@(cita.IdHorarioNavigation?.Fecha.ToString("dd/MM/yyyy") ?? "") a las @(cita.IdHorarioNavigation?.Hora.ToString() ?? "")</td>
-                    <td>@(cita.HoraLlegada?.ToString() ?? "N/A")</td>
-                    <td>@(cita.HoraSalida?.ToString() ?? "N/A")</td>
-                    <td>@cita.Estado</td>
-                    <td>@cita.FechaCreacion.ToString("dd/MM/yyyy")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+
+                            <!-- NOMBRE -->
+                            <h5 class="card-title mb-1">
+                                @cita.IdPersonaNavigation?.Nombre
+                            </h5>
+
+                            <!-- CÉDULA -->
+                            <p class="text-muted mb-2">
+                                Cédula: <strong>@cita.IdPersonaNavigation?.Cedula</strong>
+                            </p>
+
+                            <hr />
+
+                            <!-- HORARIO -->
+                            <p class="mb-1">
+                                <strong>Horario:</strong><br />
+                                @(cita.IdHorarioNavigation?.Fecha.ToString("dd/MM/yyyy") ?? "—")
+                                a las @(cita.IdHorarioNavigation?.Hora.ToString("HH\\:mm") ?? "—")
+                            </p>
+
+                            <!-- LLEGADA -->
+                            <p class="mb-1">
+                                <strong>Llegada:</strong>
+                                @(cita.HoraLlegada?.ToString("HH\\:mm") ?? "N/A")
+                            </p>
+
+                            <!-- SALIDA -->
+                            <p class="mb-1">
+                                <strong>Salida:</strong>
+                                @(cita.HoraSalida?.ToString("HH\\:mm") ?? "N/A")
+                            </p>
+
+                            <!-- ESTADO -->
+                            <p class="mb-1">
+                                <strong>Estado:</strong>
+                                <span class="badge
+                                            @(cita.Estado == "Completada" ? "bg-success" :
+                                                                            cita.Estado == "Cancelada" ? "bg-danger" :
+                                                                            cita.Estado == "Llegada" ? "bg-warning text-dark" :
+                                                                            "bg-secondary")">
+                            @cita.Estado
+                        </span>
+                    </p>
+
+                            <!-- FECHA CREACIÓN -->
+                            <p class="text-muted mt-2 mb-0" style="font-size: 0.9rem;">
+                                Registrada:
+                                @cita.FechaCreacion.ToString("dd/MM/yyyy")
+                            </p>
+
+                        </div>
+                    </div>
+                </div>
+                }
+        </div>
+    }
+</div>
