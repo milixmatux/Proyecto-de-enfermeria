@@ -23,15 +23,29 @@ namespace Enfermeria_app.Controllers
             var hoy = DateOnly.FromDateTime(DateTime.Today);
             var dia = persona.Tipo == "Estudiante" ? hoy : (fecha ?? hoy);
 
-            var horarios = await _context.EnfHorarios
+            // 🔹 Hora actual (solo se usa si la fecha es hoy)
+            var horaActual = TimeOnly.FromDateTime(DateTime.Now);
+
+            // 🔹 Cargar horarios base
+            var horariosQuery = _context.EnfHorarios
                 .Where(h => h.Fecha == dia)
                 .Select(h => new
                 {
                     Horario = h,
                     Cupos = h.EnfCita.Count(c => c.Estado == "Creada" && c.IdPersona == null)
                 })
-                .Where(x => x.Cupos > 0)
+                .Where(x => x.Cupos > 0)  // solo horarios con cupos
                 .OrderBy(x => x.Horario.Hora)
+                .AsQueryable();
+
+            // 🔥 FILTRO NUEVO: si la fecha es HOY → mostrar solo horarios futuros
+            if (dia == hoy)
+            {
+                horariosQuery = horariosQuery.Where(x => x.Horario.Hora >= horaActual);
+            }
+
+            // 🔹 Obtener resultado final
+            var horarios = await horariosQuery
                 .Select(x => x.Horario)
                 .AsNoTracking()
                 .ToListAsync();
@@ -42,6 +56,7 @@ namespace Enfermeria_app.Controllers
             ViewBag.FechaSoloHoy = persona.Tipo == "Estudiante";
             return View();
         }
+
 
         [Authorize(Policy = "EstudianteFuncionario")]
         [HttpPost]
@@ -111,7 +126,11 @@ namespace Enfermeria_app.Controllers
             var hoy = DateOnly.FromDateTime(DateTime.Today);
             var dia = fecha ?? hoy;
 
-            var horarios = await _context.EnfHorarios
+            // 🔹 Hora actual
+            var horaActual = TimeOnly.FromDateTime(DateTime.Now);
+
+            // 🔹 Base de consulta de horarios
+            var horariosQuery = _context.EnfHorarios
                 .Where(h => h.Fecha == dia)
                 .Select(h => new
                 {
@@ -120,6 +139,15 @@ namespace Enfermeria_app.Controllers
                 })
                 .Where(x => x.Cupos > 0)
                 .OrderBy(x => x.Horario.Hora)
+                .AsQueryable();
+
+            // 🔥 NUEVO: si el profesor está viendo HOY → solo horarios futuros
+            if (dia == hoy)
+            {
+                horariosQuery = horariosQuery.Where(x => x.Horario.Hora >= horaActual);
+            }
+
+            var horarios = await horariosQuery
                 .Select(x => x.Horario)
                 .AsNoTracking()
                 .ToListAsync();
@@ -128,8 +156,10 @@ namespace Enfermeria_app.Controllers
             ViewBag.Horarios = horarios;
             ViewBag.TipoUsuario = "Profesor";
             ViewBag.FechaSoloHoy = false;
+
             return View("Sacar");
         }
+
 
         [Authorize(Policy = "Profesor")]
         [HttpPost]
