@@ -21,9 +21,6 @@ namespace Enfermeria_app.Controllers
         // =========================
         // LOGIN
         // =========================
-        [HttpGet]
-        public IActionResult Login() => View();
-
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
@@ -54,29 +51,36 @@ namespace Enfermeria_app.Controllers
                 return View(model);
             }
 
-            // Guardar sesión
+            // Guardar datos en sesión
             HttpContext.Session.SetString("Usuario", user.Usuario);
             HttpContext.Session.SetString("NombreCompleto", user.Nombre ?? user.Usuario);
             HttpContext.Session.SetString("TipoUsuario", user.Tipo);
             HttpContext.Session.SetString("Departamento", user.Departamento ?? "");
 
-
+            // Crear Claims
             var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.Usuario),
-                new Claim("TipoUsuario", user.Tipo)
-            };
+    {
+        new Claim(ClaimTypes.Name, user.Usuario),
+        new Claim("TipoUsuario", user.Tipo)  // AQUI SE REGISTRA EL TIPO REAL DEL USUARIO
+    };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var claimsPrincipal = new ClaimsPrincipal(identity);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, new AuthenticationProperties { IsPersistent = true });
 
-            // Si la contraseña es la predeterminada, redirigir al cambio de contraseña
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                claimsPrincipal,
+                new AuthenticationProperties { IsPersistent = true }
+            );
+
+            // Si la contraseña es la predeterminada, forzar cambio de contraseña
             if (model.Contraseña == "agro2025")
                 return RedirectToAction("CambiarPassword", new { usuario = user.Usuario });
 
+            // Redirigir al inicio común
             return RedirectToAction("Inicio", "Inicio");
         }
+
 
         // =========================
         // REGISTRO

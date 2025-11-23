@@ -1,8 +1,8 @@
-using Enfermeria_app;
+ï»¿using Enfermeria_app;
 using Enfermeria_app.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.Cookies; // <- importante
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,33 +13,46 @@ builder.Services.AddSession();
 builder.Services.AddDbContext<EnfermeriaContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("EnfermeriaContext")));
 
-// ?? Configurar autenticación con cookies
+// ðŸ” AUTENTICACIÃ“N POR COOKIES
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Cuenta/Login"; // Página a la que redirige si no está logeado
+        options.LoginPath = "/Cuenta/Login";
         options.LogoutPath = "/Cuenta/CerrarSesion";
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // Tiempo de sesión
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
         options.SlidingExpiration = true;
     });
 
-builder.Services.AddAuthorization();
-
+// AUTORIZACIÃ“N (ROLES/PERFILES)
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("Profesor", p => p.RequireClaim("TipoUsuario", "Profesor"));
+    // Perfiles individuales
     options.AddPolicy("Estudiante", p => p.RequireClaim("TipoUsuario", "Estudiante"));
-    options.AddPolicy("Administrativo", p =>
-    p.RequireClaim("TipoUsuario", "Administrativo"));
     options.AddPolicy("Funcionario", p => p.RequireClaim("TipoUsuario", "Funcionario"));
+    options.AddPolicy("Profesor", p => p.RequireClaim("TipoUsuario", "Profesor"));
+    options.AddPolicy("Consultorio", p => p.RequireClaim("TipoUsuario", "Consultorio"));
+    options.AddPolicy("Administrativo", p => p.RequireClaim("TipoUsuario", "Administrativo"));
+
+    // Perfiles combinados segÃºn funciones del sistema
     options.AddPolicy("EstudianteFuncionario", p =>
-    p.RequireAssertion(ctx =>
-        ctx.User.HasClaim("TipoUsuario", "Estudiante") ||
-        ctx.User.HasClaim("TipoUsuario", "Funcionario") ||
-        ctx.User.HasClaim("TipoUsuario", "Administrativo")));
-    options.AddPolicy("EmergenciaProfesor", p => p.RequireClaim("TipoUsuario", "Profesor"));
-    options.AddPolicy("Asistente", p => p.RequireClaim("TipoUsuario", "Asistente"));
+        p.RequireAssertion(ctx =>
+            ctx.User.HasClaim("TipoUsuario", "Estudiante") ||
+            ctx.User.HasClaim("TipoUsuario", "Funcionario")));
+
+    // Acceso para quienes pueden gestionar emergencias (solo profesores)
+    options.AddPolicy("EmergenciaProfesor", p =>
+        p.RequireClaim("TipoUsuario", "Profesor"));
+
+    // Acceso para quienes gestionan horarios (Consultorio)
+    options.AddPolicy("GestionHorarios", p =>
+        p.RequireClaim("TipoUsuario", "Consultorio"));
+
+    // Acceso total (solo administrativo)
+    options.AddPolicy("AdministrativoFull", p =>
+        p.RequireClaim("TipoUsuario", "Administrativo"));
 });
+
+
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
@@ -59,7 +72,6 @@ app.UseRouting();
 
 app.UseSession();
 
-// ?? Middleware de autenticación y autorización (IMPORTANTE: antes de MapControllerRoute)
 app.UseAuthentication();
 app.UseAuthorization();
 

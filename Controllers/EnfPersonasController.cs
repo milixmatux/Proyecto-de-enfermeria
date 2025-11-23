@@ -1,4 +1,5 @@
 ﻿using Enfermeria_app.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace Enfermeria_app.Controllers
 {
+    [Authorize]
     public class EnfPersonasController : Controller
     {
         private readonly EnfermeriaContext _context;
@@ -16,7 +18,16 @@ namespace Enfermeria_app.Controllers
             _context = context;
         }
 
+        // 🧪 Helper: Determinar tipo del usuario actual
+        private string TipoUsuario =>
+            User?.Claims?.FirstOrDefault(c => c.Type == "TipoUsuario")?.Value ?? "";
+
+        private bool EsAdmin => TipoUsuario == "Administrativo";
+        private bool EsConsultorio => TipoUsuario == "Consultorio";
+
+
         // 📋 LISTADO DE PERSONAS ACTIVAS
+        [Authorize(Policy = "AdminFullAccess")] // Consultorio + Administrativo
         public async Task<IActionResult> Index(string searchString)
         {
             var personas = _context.EnfPersonas.Where(p => p.Activo);
@@ -36,7 +47,9 @@ namespace Enfermeria_app.Controllers
             return View(lista);
         }
 
+
         // 🔍 FILTRO EN TIEMPO REAL (AJAX)
+        [Authorize(Policy = "AdminFullAccess")] // Consultorio + Administrativo
         [HttpGet]
         public async Task<IActionResult> Buscar(string term)
         {
@@ -53,7 +66,9 @@ namespace Enfermeria_app.Controllers
             return PartialView("_PersonasFilas", lista);
         }
 
+
         // 👥 VER PERSONAS INACTIVAS
+        [Authorize(Policy = "AdminFullAccess")] // Consultorio + Administrativo
         public async Task<IActionResult> Inactivos()
         {
             var inactivos = await _context.EnfPersonas
@@ -64,7 +79,9 @@ namespace Enfermeria_app.Controllers
             return View(inactivos);
         }
 
+
         // 🔄 REACTIVAR PERSONA
+        [Authorize(Policy = "Administrativo")] // SOLO administrativo
         [HttpPost]
         public async Task<IActionResult> Reactivar(int id)
         {
@@ -79,7 +96,9 @@ namespace Enfermeria_app.Controllers
             return RedirectToAction(nameof(Inactivos));
         }
 
+
         // 👁️ DETALLES
+        [Authorize(Policy = "AdminFullAccess")] // Consultorio + Administrativo
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -92,13 +111,16 @@ namespace Enfermeria_app.Controllers
             return View(enfPersona);
         }
 
+
         // ➕ CREAR PERSONA
+        [Authorize(Policy = "Administrativo")] // SOLO administrativo
         [HttpGet]
         public IActionResult Create()
         {
             return View();
         }
 
+        [Authorize(Policy = "Administrativo")] // SOLO administrativo
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(EnfPersona model)
@@ -131,7 +153,9 @@ namespace Enfermeria_app.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+
         // ✏️ EDITAR PERSONA
+        [Authorize(Policy = "Administrativo")] // SOLO administrativo
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -142,6 +166,7 @@ namespace Enfermeria_app.Controllers
             return View(enfPersona);
         }
 
+        [Authorize(Policy = "Administrativo")] // SOLO administrativo
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, EnfPersona enfPersona)
@@ -162,13 +187,16 @@ namespace Enfermeria_app.Controllers
                     else
                         throw;
                 }
+
                 TempData["Mensaje"] = "✅ Cambios guardados correctamente.";
                 return RedirectToAction(nameof(Index));
             }
             return View(enfPersona);
         }
 
+
         // ❌ DESACTIVAR PERSONA
+        [Authorize(Policy = "Administrativo")] // SOLO administrativo
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -181,6 +209,7 @@ namespace Enfermeria_app.Controllers
             return View(enfPersona);
         }
 
+        [Authorize(Policy = "Administrativo")] // SOLO administrativo
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -197,7 +226,9 @@ namespace Enfermeria_app.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+
         // 🚨 CREAR CITA DE EMERGENCIA
+        [Authorize(Policy = "Consultorio")] // SOLO consultorio, NO administrativo 
         [HttpPost]
         public async Task<IActionResult> CitaEmergencia(int id)
         {
@@ -209,7 +240,6 @@ namespace Enfermeria_app.Controllers
             var fechaHoy = DateOnly.FromDateTime(ahora);
             var horaActual = TimeOnly.FromDateTime(ahora);
 
-            // Buscar o crear horario
             var horario = await _context.EnfHorarios
                 .FirstOrDefaultAsync(h => h.Fecha == fechaHoy && h.Hora == horaActual);
 
@@ -226,7 +256,6 @@ namespace Enfermeria_app.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // Crear cita válida
             var cita = new EnfCita
             {
                 IdPersona = persona.Id,
