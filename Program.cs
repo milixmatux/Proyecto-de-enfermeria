@@ -39,9 +39,9 @@ builder.Services.AddAuthorization(options =>
             ctx.User.HasClaim("TipoUsuario", "Estudiante") ||
             ctx.User.HasClaim("TipoUsuario", "Funcionario")));
 
-    // Acceso para quienes pueden gestionar emergencias (solo profesores)
+    // Acceso para quienes pueden gestionar emergencias
     options.AddPolicy("EmergenciaProfesor", p =>
-        p.RequireClaim("TipoUsuario", "Profesor"));
+    p.RequireClaim("TipoUsuario", "Profesor", "Administrativo"));
 
     // Acceso para quienes gestionan horarios (Consultorio)
     options.AddPolicy("GestionHorarios", p =>

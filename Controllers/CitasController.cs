@@ -196,14 +196,15 @@ namespace Enfermeria_app.Controllers
             return RedirectToAction(nameof(Profesor), new { fecha = horario.Fecha });
         }
 
-        [Authorize(Policy = "Profesor")]
+        [Authorize(Policy = "Profesor")] // ← ya incluye "Administrativo" por el cambio del Program.cs
         [HttpGet]
         public IActionResult Emergencia() => View();
 
-        [Authorize(Policy = "Profesor")]
+        [Authorize(Policy = "Profesor")] // ← también ya incluye Administrativo
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Emergencia(string cedula)
+
         {
             var user = User.Identity?.Name;
 
