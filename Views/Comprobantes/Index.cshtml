@@ -25,8 +25,8 @@
             <input type="date" class="form-control" id="hasta" name="hasta" value="@hasta" />
         </div>
 
-        @* Si es doctor o asistente, mostrar búsqueda por nombre/cédula *@
-        @if (tipoUsuario == "Doctor" || tipoUsuario == "Asistente")
+        @* Si es Consultorio o Administrativo, mostrar búsqueda por nombre/cédula *@
+        @if (tipoUsuario == "Consultorio" || tipoUsuario == "Administrativo")
         {
             <div class="col-12 col-md-4">
                 <label for="nombre" class="form-label">Buscar por nombre o cédula:</label>
@@ -45,13 +45,13 @@
         }
         else
         {
-            <!-- Si es estudiante, solo mostrar el botón de filtrar -->
             <div class="col-12 col-md-2">
                 <button type="submit" class="btn btn-primary w-100 mt-4">
                     <i class="bi bi-search"></i> Filtrar
                 </button>
             </div>
         }
+
     </form>
 
     <div id="tablaContainer" class="table-responsive">

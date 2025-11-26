@@ -126,6 +126,17 @@ namespace Enfermeria_app.Controllers
             return RedirectToAction("Login", "Cuenta");
         }
 
+
+
+        // =========================
+        // Acceso denegado
+        // =========================
+        public IActionResult AccesoDenegado()
+        {
+            return View();
+        }
+
+
         // =========================
         // CAMBIAR PASSWORD
         // =========================

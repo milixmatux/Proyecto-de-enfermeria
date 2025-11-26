@@ -20,14 +20,7 @@ namespace Enfermeria_app.Controllers
         }
 
         // ============================================================
-        // RUTAS BÁSICAS
-        // ============================================================
-        public IActionResult Publicar() => View();
-        public IActionResult CheckInOut() => View();
-        public IActionResult Cancelar() => View();
-
-        // ============================================================
-        // Helper de roles / permisos
+        // Helpers de rol / permisos (case-insensitive comparisions)
         // ============================================================
         bool EsEstudiante(string tipo) => string.Equals(tipo, "Estudiante", StringComparison.OrdinalIgnoreCase);
         bool EsFuncionario(string tipo) => string.Equals(tipo, "Funcionario", StringComparison.OrdinalIgnoreCase);
@@ -44,11 +37,17 @@ namespace Enfermeria_app.Controllers
             => EsProfesor(tipo) || EsConsultorio(tipo) || EsAdministrativo(tipo);
 
         // ============================================================
+        // RUTAS BÁSICAS
+        // ============================================================
+        public IActionResult Publicar() => View();
+        public IActionResult CheckInOut() => View();
+        public IActionResult Cancelar() => View();
+
+        // ============================================================
         // GET: Sacar (mostrar horarios disponibles)
         // - Estudiantes: sólo hoy
         // - Si la fecha es hoy, se ocultan horarios ya pasados
         // ============================================================
-        [Authorize(Policy = "EstudianteFuncionario")] // mantiene compatibilidad; otros perfiles también entran por sesión
         [HttpGet]
         public async Task<IActionResult> Sacar(DateOnly? fecha = null)
         {
@@ -100,7 +99,6 @@ namespace Enfermeria_app.Controllers
         // - Valida permisos para reservar para sí mismo
         // - Estudiantes: sólo hoy y 1 cita por día
         // ============================================================
-        [Authorize(Policy = "EstudianteFuncionario")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Sacar(int horarioId)
@@ -166,6 +164,25 @@ namespace Enfermeria_app.Controllers
         }
 
         // ============================================================
+        // Acción Profesor (compatibilidad con rutas antiguas)
+        // - Si alguien accede a /Citas/Profesor le redirigimos a Sacar (misma vista)
+        // ============================================================
+        [HttpGet]
+        public async Task<IActionResult> Profesor(DateOnly? fecha = null)
+        {
+            var username = User.Identity?.Name;
+            var persona = await _context.EnfPersonas.FirstOrDefaultAsync(p => p.Usuario == username);
+            if (persona == null) return RedirectToAction("Login", "Cuenta");
+
+            // Si no es profesor, denegar (pero no usar AccessDenied autom. si quieres diferente)
+            if (!EsProfesor(persona.Tipo))
+                return RedirectToAction("AccesoDenegado", "Cuenta");
+
+            // Reusar Sacar (profesor puede ver otros días)
+            return await Sacar(fecha);
+        }
+
+        // ============================================================
         // Emergencia (GET/POST)
         // - Permite crear cita para otra persona (Profesor, Consultorio, Administrativo)
         // - Si no hay bloque disponible se crea el siguiente bloque (como antes)
@@ -177,7 +194,7 @@ namespace Enfermeria_app.Controllers
             var user = _context.EnfPersonas.FirstOrDefault(p => p.Usuario == username);
 
             if (user == null || !PuedeSacarEmergencias(user.Tipo))
-                return RedirectToAction("AccesoDenegado", "Home");
+                return RedirectToAction("AccesoDenegado", "Cuenta");
 
             return View();
         }
@@ -255,7 +272,9 @@ namespace Enfermeria_app.Controllers
                     .FirstAsync(h => h.Id == horario.Id);
             }
 
-            var cupo = horario.EnfCita.FirstOrDefault(c => c.Estado == "Creada" && c.IdPersona == null);
+            var cupo = horario.EnfCita?.FirstOrDefault(c => c.Estado == "Creada" && c.IdPersona == null)
+                       ?? horario.EnfCita.FirstOrDefault(c => c.Estado == "Creada" && c.IdPersona == null);
+
             if (cupo == null)
             {
                 TempData["Error"] = "Bloque no disponible.";
@@ -291,10 +310,11 @@ namespace Enfermeria_app.Controllers
 
             var like = $"%{q}%";
 
+            // Evitar StringComparison en EF: usar EF.Functions.Like y comparaciones sencillas
             var results = await _context.EnfPersonas
                 .Where(p =>
                     p.Tipo != null &&
-                    p.Tipo.Equals("Estudiante", StringComparison.OrdinalIgnoreCase) &&
+                    p.Tipo.ToLower() == "estudiante" &&
                     (
                         (!string.IsNullOrEmpty(p.Nombre) && EF.Functions.Like(p.Nombre, like)) ||
                         (!string.IsNullOrEmpty(p.Cedula) && EF.Functions.Like(p.Cedula, like))
@@ -385,25 +405,30 @@ namespace Enfermeria_app.Controllers
                 .Include(c => c.IdHorarioNavigation)
                 .AsQueryable();
 
+            // Filtrar solo estudiantes
+            citas = citas.Where(c => c.IdPersonaNavigation != null && c.IdPersonaNavigation.Tipo != null && c.IdPersonaNavigation.Tipo.ToLower() == "estudiante");
+
             if (!string.IsNullOrWhiteSpace(filtro))
             {
+                var f = filtro.Trim().ToLower();
+
+                // Evitar StringComparison en la query: usar ToLower + Contains (esto se traduce)
                 citas = citas.Where(c =>
-                    c.IdPersonaNavigation != null &&
-                    c.IdPersonaNavigation.Tipo != null &&
-                    c.IdPersonaNavigation.Tipo.Equals("Estudiante", StringComparison.OrdinalIgnoreCase) &&
-                    (
-                        (c.IdPersonaNavigation.Nombre != null && c.IdPersonaNavigation.Nombre.Contains(filtro)) ||
-                        (c.IdPersonaNavigation.Cedula != null && c.IdPersonaNavigation.Cedula.Contains(filtro))
-                    )
+                    (c.IdPersonaNavigation.Nombre != null && c.IdPersonaNavigation.Nombre.ToLower().Contains(f)) ||
+                    (c.IdPersonaNavigation.Cedula != null && c.IdPersonaNavigation.Cedula.Contains(f))
                 );
             }
             else
             {
-                // Si no hay filtro, devolver vacío (evita listar por defecto)
+                // Si no hay filtro → devolver vacío
                 citas = citas.Take(0);
             }
 
-            var lista = await citas.OrderByDescending(c => c.FechaCreacion).AsNoTracking().ToListAsync();
+            var lista = await citas
+                .OrderByDescending(c => c.FechaCreacion)
+                .AsNoTracking()
+                .ToListAsync();
+
             return View("Estudiante_Historial", lista);
         }
 
