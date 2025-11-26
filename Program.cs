@@ -42,7 +42,6 @@ builder.Services.AddAuthorization(options =>
     // Acceso para quienes pueden gestionar emergencias
     options.AddPolicy("EmergenciaProfesor", p =>
     p.RequireClaim("TipoUsuario", "Profesor", "Administrativo"));
-
     // Acceso para quienes gestionan horarios (Consultorio)
     options.AddPolicy("GestionHorarios", p =>
         p.RequireClaim("TipoUsuario", "Consultorio"));

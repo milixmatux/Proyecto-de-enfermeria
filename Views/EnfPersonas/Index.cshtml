@@ -2,6 +2,10 @@
 
 @{
     ViewData["Title"] = "Listado de Personas";
+
+    var tipo = Context.Session.GetString("TipoUsuario") ?? "";
+    bool esAdmin = tipo == "Administrativo";
+    bool esConsultorio = tipo == "Consultorio";
 }
 
 <div class="container mt-4">
@@ -14,18 +18,26 @@
 
     <!-- Controles superiores -->
     <div class="row align-items-center mb-3">
-        <div class="col-12 col-md-6 mb-2 mb-md-0 d-flex gap-2">
-            <a asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-person-plus"></i> Crear Nueva Persona
-            </a>
-            <a asp-action="Inactivos" class="btn btn-outline-secondary">
-                <i class="bi bi-person-dash"></i> Ver Inactivos
-            </a>
-        </div>
 
+        <!-- Botones solo para ADMINISTRATIVO -->
+        @if (esAdmin)
+        {
+            <div class="col-12 col-md-6 mb-2 mb-md-0 d-flex gap-2">
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Crear Nueva Persona
+                </a>
+
+                <a asp-action="Inactivos" class="btn btn-outline-secondary">
+                    <i class="bi bi-person-dash"></i> Ver Inactivos
+                </a>
+            </div>
+        }
+
+        <!-- Campo de búsqueda -->
         <div class="col-12 col-md-6">
             <div class="input-group w-100">
-                <input type="text" id="searchInput" class="form-control" placeholder="Buscar por nombre o cédula..." autocomplete="off" />
+                <input type="text" id="searchInput" class="form-control"
+                       placeholder="Buscar por nombre o cédula..." autocomplete="off" />
             </div>
         </div>
     </div>
@@ -35,17 +47,18 @@
         <table class="table table-bordered table-striped table-hover">
             <thead class="table-dark">
                 <tr>
-                    <th>@Html.DisplayNameFor(model => model.Cedula)</th>
-                    <th>@Html.DisplayNameFor(model => model.Nombre)</th>
-                    <th>@Html.DisplayNameFor(model => model.Tipo)</th>
+                    <th>Cédula</th>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
+
             <tbody id="tablaPersonas">
                 @if (!Model.Any())
                 {
                     <tr>
-                        <td colspan="12" class="text-center text-danger">
+                        <td colspan="4" class="text-center text-danger">
                             No se encontraron resultados.
                             <a asp-action="Index" class="btn btn-link">Volver al listado</a>
                         </td>
@@ -60,34 +73,55 @@
                             <td>@item.Nombre</td>
                             <td>@item.Tipo</td>
                             <td>
+                                <!-- PC: botones horizontales -->
                                 <div class="btn-group d-none d-md-flex" role="group">
-                                    <button type="button" class="btn btn-danger btn-sm btnCitaEmergencia"
-                                            data-id="@item.Id" data-nombre="@item.Nombre">
+
+                                    <!-- Emergencia: ADMIN + CONSULTORIO -->
+                                    <button type="button"
+                                            class="btn btn-danger btn-sm btnCitaEmergencia"
+                                            data-id="@item.Id"
+                                            data-nombre="@item.Nombre">
                                         <i class="bi bi-activity"></i> Emergencia
                                     </button>
 
-                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">
-                                        <i class="bi bi-eye"></i> Detalles
-                                    </a>
+                                    @if (esAdmin)
+                                    {
+                                        <a asp-action="Details"
+                                           asp-route-id="@item.Id"
+                                           class="btn btn-info btn-sm">
+                                            <i class="bi bi-eye"></i> Detalles
+                                        </a>
 
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-warning btn-sm">
-                                        <i class="bi bi-x-circle"></i> Desactivar
-                                    </a>
+                                        <a asp-action="Delete"
+                                           asp-route-id="@item.Id"
+                                           class="btn btn-warning btn-sm">
+                                            <i class="bi bi-x-circle"></i> Desactivar
+                                        </a>
+                                    }
                                 </div>
 
+                                <!-- TELÉFONO: botones verticales -->
                                 <div class="d-flex d-md-none flex-column gap-1">
+
+                                    <!-- Emergencia: ADMIN + CONSULTORIO -->
                                     <button type="button" class="btn btn-danger btn-sm btnCitaEmergencia"
-                                            data-id="@item.Id" data-nombre="@item.Nombre">
+                                            data-id="@item.Id"
+                                            data-nombre="@item.Nombre">
                                         <i class="bi bi-activity"></i> Emergencia
                                     </button>
 
-                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">
-                                        <i class="bi bi-eye"></i> Detalles
-                                    </a>
+                                    @if (esAdmin)
+                                    {
+                                        <a asp-action="Details" asp-route-id="@item.Id"
+                                           class="btn btn-info btn-sm">
+                                            <i class="bi bi-eye"></i> Detalles
+                                        </a>
 
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-warning btn-sm">
-                                        <i class="bi bi-x-circle"></i> Desactivar
-                                    </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id"
+                                           class="btn btn-warning btn-sm">
+                                            <i class="bi bi-x-circle"></i> Desactivar
+                                        </a>
+                                    }
                                 </div>
                             </td>
                         </tr>
@@ -98,10 +132,12 @@
     </div>
 </div>
 
+
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // --- 🔍 BÚSQUEDA EN TIEMPO REAL ---
+
+            // 🔍 BÚSQUEDA AJAX
             $("#searchInput").on("keyup", function () {
                 var term = $(this).val();
 
@@ -110,16 +146,14 @@
                     type: 'GET',
                     data: { term: term },
                     success: function (result) {
-                        $("#tablaPersonas").html(result); // Reemplaza las filas de la tabla
-                    },
-                    error: function () {
-                        console.error("❌ Error al buscar personas.");
+                        $("#tablaPersonas").html(result);
                     }
                 });
             });
 
-            // --- 🚨 CITA DE EMERGENCIA ---
+            // 🚨 CITA DE EMERGENCIA
             $(document).on("click", ".btnCitaEmergencia", function () {
+
                 var idPersona = $(this).data("id");
                 var nombre = $(this).data("nombre");
 
@@ -130,8 +164,9 @@
                     url: '/EnfPersonas/CitaEmergencia/' + idPersona,
                     type: 'POST',
                     success: function (response) {
+
                         if (response.success) {
-                            alert(response.message);
+                            alert("✅ " + response.message);
                         } else {
                             alert("⚠️ " + response.message);
                         }

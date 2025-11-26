@@ -19,14 +19,20 @@ namespace Enfermeria_app.Controllers
             _context = context;
         }
 
-        // ✅ Verifica si el usuario es Asistente o Doctor
+        // ============================
+        // 🔐 Nuevo método de permisos
+        // ============================
         bool EsPersonalAutorizado()
         {
-            var tipo = User?.Claims?.FirstOrDefault(c => c.Type == "TipoUsuario")?.Value;
-            return tipo == "Asistente" || tipo == "Doctor";
+            var tipo = User?.Claims?.FirstOrDefault(c => c.Type == "TipoUsuario")?.Value?.Trim().ToLower();
+
+            // Solo CONSULTORIO puede usar este módulo
+            return tipo == "consultorio";
         }
 
-        // ✅ Normaliza teléfono CR
+        // ============================
+        // Normalizador de teléfono
+        // ============================
         string NormalizarCR(string? tel)
         {
             if (string.IsNullOrWhiteSpace(tel)) return "";
@@ -36,7 +42,6 @@ namespace Enfermeria_app.Controllers
             return $"+506{digits}";
         }
 
-        // ✅ Convierte fechas seguras
         DateOnly? ParseDate(string? v)
         {
             if (string.IsNullOrWhiteSpace(v)) return null;
@@ -46,7 +51,9 @@ namespace Enfermeria_app.Controllers
             return null;
         }
 
-        // ✅ INDEX: muestra solo citas registradas y permite filtrar por rango
+        // ============================
+        // 📌 INDEX
+        // ============================
         [HttpGet]
         public async Task<IActionResult> Index(string? desde = null, string? hasta = null)
         {
@@ -85,7 +92,9 @@ namespace Enfermeria_app.Controllers
             return View("Index", citas);
         }
 
-        // ✅ AJAX - Registrar llegada
+        // ============================
+        // 📌 Registrar llegada (AJAX)
+        // ============================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LlegadaAjax(int id, string? mensaje, int idProfesor)
@@ -111,21 +120,21 @@ namespace Enfermeria_app.Controllers
             var ahora = TimeOnly.FromDateTime(DateTime.Now);
             cita.HoraLlegada = ahora;
             cita.MensajeLlegada = mensaje ?? "";
-            cita.Estado = "Llegada"; // 👈 Actualizamos el estado
+            cita.Estado = "Llegada";
+
             _context.EnfCitas.Update(cita);
             await _context.SaveChangesAsync();
 
             var tel = NormalizarCR(profesor.Telefono);
-            var obs = string.IsNullOrWhiteSpace(mensaje) ? "ninguna" : mensaje;
-            var nom = cita.IdPersonaNavigation?.Nombre ?? "estudiante";
-            var sec = cita.IdPersonaNavigation?.Seccion ?? "";
-            var texto = Uri.EscapeDataString($"{nom}, estudiante de {sec}, ha llegado a la enfermería a las {ahora:HH\\:mm}. Observaciones: {obs}");
+            var texto = Uri.EscapeDataString($"{cita.IdPersonaNavigation?.Nombre} ha llegado a la enfermería a las {ahora:HH:mm}. Observaciones: {(mensaje ?? "ninguna")}");
             var url = $"https://wa.me/{tel}?text={texto}";
 
             return Json(new { ok = true, hora = ahora.ToString("HH:mm"), waUrl = url });
         }
 
-        // ✅ AJAX - Registrar salida
+        // ============================
+        // 📌 Registrar salida (AJAX)
+        // ============================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SalidaAjax(int id, string mensaje, int idProfesor)
@@ -148,12 +157,10 @@ namespace Enfermeria_app.Controllers
             if (string.IsNullOrWhiteSpace(mensaje))
                 return Json(new { ok = false, msg = "El motivo es obligatorio." });
 
-            // si no tiene hora de llegada, se registra automáticamente
             if (cita.HoraLlegada == null)
             {
                 cita.HoraLlegada = TimeOnly.FromDateTime(DateTime.Now);
-                if (string.IsNullOrWhiteSpace(cita.MensajeLlegada))
-                    cita.MensajeLlegada = "(auto)";
+                cita.MensajeLlegada = "(auto)";
             }
 
             if (cita.HoraSalida != null)
@@ -162,18 +169,16 @@ namespace Enfermeria_app.Controllers
             var ahora = TimeOnly.FromDateTime(DateTime.Now);
             cita.HoraSalida = ahora;
             cita.MensajeSalida = mensaje;
-            cita.Estado = "Completada"; // 👈 Actualizamos el estado
+            cita.Estado = "Completada";
+
             _context.EnfCitas.Update(cita);
             await _context.SaveChangesAsync();
 
             var tel = NormalizarCR(profesor.Telefono);
-            var nom = cita.IdPersonaNavigation?.Nombre ?? "estudiante";
-            var sec = cita.IdPersonaNavigation?.Seccion ?? "";
-            var texto = Uri.EscapeDataString($"{nom}, estudiante de {sec}, ha salido de la enfermería a las {ahora:HH\\:mm}. Motivo: {mensaje}");
+            var texto = Uri.EscapeDataString($"{cita.IdPersonaNavigation?.Nombre} ha salido de la enfermería a las {ahora:HH:mm}. Motivo: {mensaje}");
             var url = $"https://wa.me/{tel}?text={texto}";
 
             return Json(new { ok = true, hora = ahora.ToString("HH:mm"), waUrl = url });
         }
-
     }
 }

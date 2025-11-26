@@ -1,178 +1,149 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Http
+
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Consultorio Médico</title>
 
-    <!-- 1. Google Fonts y Librerías Externas -->
+    <!-- Google Fonts y Librerías -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
-    <!-- 2. Hojas de Estilo del Proyecto (Base y Personalizadas) -->
+    <!-- Estilos del Proyecto -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Enfermeria_app.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/custom-styles.css" asp-append-version="true" />
 
     @RenderSection("Styles", required: false)
-
 </head>
+
 <body>
-    <header>
-        <nav class="navbar navbar-light bg-white fixed-top border-bottom shadow-sm">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="/">
-                    @if (Context.Session.GetString("NombreCompleto") != null)
-                    {
-                        @Context.Session.GetString("NombreCompleto")
-                    }
-                    else
-                    {
-                                <text>ECA</text>
-                    }
-                </a>
+<header>
+    <nav class="navbar navbar-light bg-white fixed-top border-bottom shadow-sm">
+        <div class="container-fluid">
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
-                        aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+            <a class="navbar-brand" href="/Inicio/Inicio">
+                @Context.Session.GetString("NombreCompleto") 
+            </a>
 
-                <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-                    <div class="offcanvas-header">
-                        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Menú</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
-                    </div>
-                    <div class="offcanvas-body">
-                        @{
-                            var tipo = Context.Session.GetString("TipoUsuario");
-                            var departamento = Context.Session.GetString("Departamento");
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="offcanvas offcanvas-end" id="offcanvasNavbar">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title">Menú</h5>
+                    <button class="btn-close" data-bs-dismiss="offcanvas"></button>
+                </div>
+
+                <div class="offcanvas-body">
+                    @{
+                        var tipo = Context.Session.GetString("TipoUsuario");
+                    }
+
+                    <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+
+                        <!-- Siempre visible -->
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Inicio" asp-action="Inicio">Inicio</a>
+                        </li>
+
+                        <!-- ================================
+                               MENÚ SEGÚN TIPO DE USUARIO
+                           ================================ -->
+
+                        @*  CONSULTORIO  *@
+                        @if (tipo == "Consultorio")
+                        {
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="RegistrarLlegada" asp-action="Index">Check-in/out</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="GestionDisponibilidad" asp-action="Index">Disponibilidad de Citas</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="EnfPersonas" asp-action="Index">Listado de Personas</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Comprobantes" asp-action="Index">Comprobantes</a></li>
                         }
 
-                        <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Inicio" asp-action="Inicio">Inicio</a>
+                        @*  ADMINISTRATIVO  *@
+                        else if (tipo == "Administrativo")
+                        {
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="EnfPersonas" asp-action="Index">Gestión de Personas</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="GestionDisponibilidad" asp-action="Index">Disponibilidad de Citas</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="RegistrarLlegada" asp-action="Index">Check-in/out</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Citas" asp-action="Estudiante_Historial">Historial General</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Comprobantes" asp-action="Index">Comprobantes</a></li>
+                        }
+
+                        @*  ESTUDIANTE  *@
+                        else if (tipo == "Estudiante")
+                        {
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Citas" asp-action="Sacar">Sacar Cita</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Citas" asp-action="Historial">Historial</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Comprobantes" asp-action="Index">Comprobantes</a></li>
+                        }
+
+                        @*  FUNCIONARIO  *@
+                        else if (tipo == "Funcionario")
+                        {
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Citas" asp-action="Sacar">Sacar Cita</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Citas" asp-action="Historial">Historial</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Comprobantes" asp-action="Index">Comprobantes</a></li>
+                        }
+
+                        @*  PROFESOR  *@
+                        else if (tipo == "Profesor")
+                        {
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Citas" asp-action="Profesor">Sacar Cita</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Citas" asp-action="Historial">Historial</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Citas" asp-action="Estudiante_Historial">Historial Estudiantes</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Comprobantes" asp-action="Index">Comprobantes</a></li>
+                        }
+
+                        <!-- ================================ -->
+
+                        <!-- Pie del menú (solo si está logueado) -->
+                        @if (!string.IsNullOrEmpty(tipo))
+                        {
+                            <li class="nav-item-divider my-3"></li>
+
+                            <li class="nav-item px-3">
+                                <span class="text-muted d-block">Usuario: @tipo</span>
                             </li>
 
-                            @{
-                                if (tipo == "Asistente")
-                                {
-                                 
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="RegistrarLlegada" asp-action="Index">Check-in/out</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="GestionDisponibilidad" asp-action="Index">Disponibilidad de Citas</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="EnfPersonas" asp-action="Index">Listado de Personas</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="Comprobantes" asp-action="Index">Comprobantes</a>
-                                    </li>
+                            <li class="nav-item">
+                                <form asp-controller="Cuenta" asp-action="CerrarSesion" method="post">
+                                    <button type="submit" class="btn btn-link nav-link text-danger w-100 text-start">Cerrar sesión</button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
 
-
-                                }
-                                else if (tipo == "Doctor")
-                                {
-                                 
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="RegistrarLlegada" asp-action="Index">Check-in/out</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="GestionDisponibilidad" asp-action="Index">Disponibilidad de Citas</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="EnfPersonas" asp-action="Index">Listado de Personas</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="Comprobantes" asp-action="Index">Comprobantes</a>
-                                    </li>
-
-
-                                }
-                                else if (tipo == "Estudiante")
-                                {
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="Citas" asp-action="Sacar">Sacar Cita</a>
-                                    </li>
-                                   
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="Citas" asp-action="Historial">Historial</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="Comprobantes" asp-action="Index">Comprobantes</a>
-                                    </li>
-                                }
-                                else if (tipo == "Profesor")
-                                {
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="Citas" asp-action="Profesor">Sacar Cita</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="Citas" asp-action="Historial">Historial</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="Citas" asp-action="Estudiante_Historial">Estudiante Historial</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="Comprobantes" asp-action="Index">Comprobantes</a>
-                                    </li>
-                                }
-                                else if (tipo == "Funcionario")
-                                {
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="Citas" asp-action="Sacar">Sacar Cita</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="Citas" asp-action="Historial">Historial</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-controller="Comprobantes" asp-action="Index">Comprobantes</a>
-                                    </li>
-                                }
-                            }
-
-
-                            @if (!string.IsNullOrEmpty(tipo))
-                            {
-                                <li class="nav-item-divider my-3"></li>
-                                <li class="nav-item px-3">
-                                    <span class="text-muted d-block">Usuario: @tipo</span>
-                                </li>
-                                <li class="nav-item">
-                                    <form asp-controller="Cuenta" asp-action="CerrarSesion" method="post">
-                                        <button type="submit" class="btn btn-link nav-link text-danger w-100 text-start">Cerrar sesión</button>
-                                    </form>
-                                </li>
-                            }
-                        </ul>
-                    </div>
                 </div>
             </div>
-        </nav>
-    </header>
-
-    <!-- El div 'container' se quita de aquí para permitir que la vista controle su propio layout (como tu pantalla con diseño) -->
-    <main role="main" class="pb-3" style="padding-top: 70px;">
-        @RenderBody()
-    </main>
-
-    <footer class="border-top footer text-muted bg-white">
-        <div class="container">
-            © @DateTime.Now.Year - Consultorio Médico - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacidad</a>
         </div>
-    </footer>
+    </nav>
+</header>
 
-    <!-- 3. Scripts del Proyecto (Base y Externos) -->
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+<main role="main" class="pb-3" style="padding-top: 70px;">
+    @RenderBody()
+</main>
 
-    @await RenderSectionAsync("Scripts", required: false)
+<footer class="border-top footer text-muted bg-white">
+    <div class="container">
+        © @DateTime.Now.Year - Consultorio Médico - 
+        <a asp-controller="Home" asp-action="Privacy">Privacidad</a>
+    </div>
+</footer>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+
+@await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>

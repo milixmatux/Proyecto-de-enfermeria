@@ -1,6 +1,17 @@
 ﻿@model Enfermeria_app.Models.EnfPersona
 
 @{
+    var tipo = Context.Session.GetString("TipoUsuario") ?? "";
+
+    if (tipo != "Administrativo")
+    {
+        <div class="alert alert-danger mt-5 text-center">
+            <h4>⛔ Acceso denegado</h4>
+            <p>No tienes permisos para desactivar personas.</p>
+        </div>
+        return;
+    }
+
     ViewData["Title"] = "Desactivar Persona";
 }
 

@@ -8,7 +8,7 @@ using System.Globalization;
 
 namespace Enfermeria_app.Controllers
 {
-    [Authorize(Policy = "GestionHorarios")] // 🔐 SOLO CONSULTORIO PUEDE ENTRAR
+    [Authorize]
     public class GestionDisponibilidadController : Controller
     {
         private readonly EnfermeriaContext _context;
@@ -18,32 +18,39 @@ namespace Enfermeria_app.Controllers
             _context = context;
         }
 
-        // ============================
-        // VALIDACIÓN DE PERMISOS
-        // ============================
-        private bool UsuarioEsConsultorio(string usuarioActual)
+        // =====================================================
+        //  🔐 VALIDACIÓN CENTRALIZADA DE PERMISOS
+        // =====================================================
+        private bool TienePermisoGestionHorario(string usuarioActual)
         {
             if (string.IsNullOrWhiteSpace(usuarioActual))
                 return false;
 
+            string usuarioNormalizado = usuarioActual.Trim().ToLower();
+
             var persona = _context.EnfPersonas
                 .AsNoTracking()
-                .FirstOrDefault(p => p.Usuario == usuarioActual && p.Activo);
+                .FirstOrDefault(p => p.Usuario.Trim().ToLower() == usuarioNormalizado);
 
-            if (persona == null)
+            if (persona == null || !persona.Activo)
                 return false;
 
-            return persona.Tipo.Trim().ToLower() == "consultorio";
+            string tipo = persona.Tipo?.Trim().ToLower() ?? "";
+
+            //  SOLO estos pueden administrar horarios:
+            //  ✔ consultorio
+            //  ✔ administrativo
+            return tipo == "consultorio" || tipo == "administrativo";
         }
 
-        // ============================
-        // INDEX (VISTA PRINCIPAL)
-        // ============================
+        // =====================================================
+        //  📅 INDEX: Mostramos horario del día seleccionado
+        // =====================================================
         public async Task<IActionResult> Index(DateTime? fechaSeleccionada)
         {
             string? usuarioActual = HttpContext.Session.GetString("Usuario");
 
-            if (!UsuarioEsConsultorio(usuarioActual))
+            if (string.IsNullOrEmpty(usuarioActual) || !TienePermisoGestionHorario(usuarioActual))
                 return RedirectToAction("AccesoDenegado", "Home");
 
             DateTime fechaPicker = fechaSeleccionada?.Date ?? DateTime.Today;
@@ -55,22 +62,19 @@ namespace Enfermeria_app.Controllers
                 HorasDelDia = new List<HoraViewModel>()
             };
 
-            // No permitir sábados ni domingos
-            if (fechaParaDb.DayOfWeek == DayOfWeek.Saturday ||
-                fechaParaDb.DayOfWeek == DayOfWeek.Sunday)
+            if (fechaParaDb.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
             {
                 viewModel.EsFinDeSemana = true;
                 return View(viewModel);
             }
 
-            // Generar horarios si no existen
+            // ¿Ya existen horarios para este día?
             bool existenHorarios = await _context.EnfHorarios.AnyAsync(h => h.Fecha == fechaParaDb);
 
             if (!existenHorarios)
             {
                 var nuevosHorarios = new List<EnfHorario>();
 
-                // 7:00 AM – 5:00 PM cada 30 minutos
                 for (var hora = new TimeOnly(7, 0); hora < new TimeOnly(17, 0); hora = hora.AddMinutes(30))
                 {
                     nuevosHorarios.Add(new EnfHorario
@@ -78,7 +82,7 @@ namespace Enfermeria_app.Controllers
                         Fecha = fechaParaDb,
                         Hora = hora,
                         Estado = "Activo",
-                        UsuarioCreacion = usuarioActual ?? "Sistema"
+                        UsuarioCreacion = "Sistema"
                     });
                 }
 
@@ -86,18 +90,15 @@ namespace Enfermeria_app.Controllers
                 await _context.SaveChangesAsync();
 
                 var nuevasCitas = new List<EnfCita>();
-
                 foreach (var horario in nuevosHorarios)
                 {
-                    // Cada horario tiene 2 cupos
                     for (int i = 0; i < 2; i++)
                     {
                         nuevasCitas.Add(new EnfCita
                         {
                             IdHorario = horario.Id,
-                            IdPersona = null,
                             Estado = "Creada",
-                            UsuarioCreacion = usuarioActual ?? "Sistema"
+                            UsuarioCreacion = "Sistema"
                         });
                     }
                 }
@@ -106,6 +107,7 @@ namespace Enfermeria_app.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            // Cargar horarios con citas
             var horariosDelDia = await _context.EnfHorarios
                 .Where(h => h.Fecha == fechaParaDb)
                 .Include(h => h.EnfCita)
@@ -126,12 +128,13 @@ namespace Enfermeria_app.Controllers
             }
 
             viewModel.TotalCitasActivas = viewModel.HorasDelDia.Sum(h => h.CantidadCitasProgramadas);
+
             return View(viewModel);
         }
 
-        // ============================
-        // OBTENER HORARIOS DEL DÍA
-        // ============================
+        // =====================================================
+        //  AJAX - Obtener horarios de un día
+        // =====================================================
         [HttpGet]
         public async Task<IActionResult> ObtenerHorarios(DateTime fecha)
         {
@@ -151,9 +154,9 @@ namespace Enfermeria_app.Controllers
             return Json(horarios);
         }
 
-        // ============================
-        // GUARDAR CAMBIOS EN CUPOS
-        // ============================
+        // =====================================================
+        //  📝 Guardar cambios de capacidad por bloque horario
+        // =====================================================
         [HttpPost]
         public async Task<IActionResult> GuardarCambios([FromBody] List<GuardarCitaDto> datosCitas)
         {
@@ -175,7 +178,8 @@ namespace Enfermeria_app.Controllers
 
                     if (cantidadNueva > cantidadActual)
                     {
-                        for (int i = 0; i < cantidadNueva - cantidadActual; i++)
+                        // Agregar cupos
+                        for (int i = 0; i < (cantidadNueva - cantidadActual); i++)
                         {
                             _context.EnfCitas.Add(new EnfCita
                             {
@@ -187,31 +191,31 @@ namespace Enfermeria_app.Controllers
                     }
                     else if (cantidadNueva < cantidadActual)
                     {
-                        var eliminar = citasActuales.Take(cantidadActual - cantidadNueva);
-                        _context.EnfCitas.RemoveRange(eliminar);
+                        // Quitar cupos sobrantes
+                        var paraEliminar = citasActuales.Take(cantidadActual - cantidadNueva).ToList();
+                        _context.EnfCitas.RemoveRange(paraEliminar);
                     }
                 }
 
                 await _context.SaveChangesAsync();
 
-                // Obtener la fecha modificada
-                var fechaGuardada = await _context.EnfHorarios
+                // Recalcular total del día actualizado
+                var fecha = await _context.EnfHorarios
                     .Where(h => h.Id == datosCitas.First().HorarioId)
                     .Select(h => h.Fecha)
                     .FirstAsync();
 
-                var nuevoTotal = await _context.EnfCitas
-                    .CountAsync(c => c.IdHorarioNavigation.Fecha == fechaGuardada &&
-                                     c.Estado == "Creada");
+                var total = await _context.EnfCitas
+                    .CountAsync(c => c.IdHorarioNavigation.Fecha == fecha && c.Estado == "Creada");
 
                 await transaction.CommitAsync();
 
-                return Json(new { success = true, nuevoTotalCitas = nuevoTotal });
+                return Json(new { success = true, nuevoTotalCitas = total });
             }
             catch
             {
                 await transaction.RollbackAsync();
-                return Json(new { success = false, message = "Error al guardar los datos." });
+                return Json(new { success = false, message = "Error al guardar los cambios." });
             }
         }
     }

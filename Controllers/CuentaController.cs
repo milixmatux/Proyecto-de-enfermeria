@@ -21,6 +21,14 @@ namespace Enfermeria_app.Controllers
         // =========================
         // LOGIN
         // =========================
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult Login()
+        {
+            return View();
+        }
+
+        [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
@@ -34,7 +42,6 @@ namespace Enfermeria_app.Controllers
                 return View(model);
             }
 
-            // Verificar contraseña (hash o texto plano)
             bool passwordValida =
                 (user.Password == model.Contraseña) ||
                 BCrypt.Net.BCrypt.Verify(model.Contraseña, user.Password);
@@ -47,40 +54,32 @@ namespace Enfermeria_app.Controllers
 
             if (!user.Activo)
             {
-                ViewBag.Error = "Usuario desactivado. Contacte al administrador.";
+                ViewBag.Error = "Usuario desactivado.";
                 return View(model);
             }
 
-            // Guardar datos en sesión
+            // GUARDA SESIÓN
             HttpContext.Session.SetString("Usuario", user.Usuario);
             HttpContext.Session.SetString("NombreCompleto", user.Nombre ?? user.Usuario);
             HttpContext.Session.SetString("TipoUsuario", user.Tipo);
             HttpContext.Session.SetString("Departamento", user.Departamento ?? "");
 
-            // Crear Claims
             var claims = new List<Claim>
     {
         new Claim(ClaimTypes.Name, user.Usuario),
-        new Claim("TipoUsuario", user.Tipo)  // AQUI SE REGISTRA EL TIPO REAL DEL USUARIO
+        new Claim("TipoUsuario", user.Tipo)
     };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var claimsPrincipal = new ClaimsPrincipal(identity);
 
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                claimsPrincipal,
-                new AuthenticationProperties { IsPersistent = true }
-            );
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
 
-            // Si la contraseña es la predeterminada, forzar cambio de contraseña
             if (model.Contraseña == "agro2025")
                 return RedirectToAction("CambiarPassword", new { usuario = user.Usuario });
 
-            // Redirigir al inicio común
             return RedirectToAction("Inicio", "Inicio");
         }
-
 
         // =========================
         // REGISTRO

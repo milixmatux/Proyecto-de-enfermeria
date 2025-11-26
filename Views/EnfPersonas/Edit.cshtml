@@ -1,8 +1,20 @@
 ﻿@model Enfermeria_app.Models.EnfPersona
 
 @{
+    var tipo = Context.Session.GetString("TipoUsuario") ?? "";
+
+    if (tipo != "Administrativo")
+    {
+        <div class="alert alert-danger mt-5 text-center">
+            <h4>⛔ Acceso denegado</h4>
+            <p>No tienes permisos para editar personas.</p>
+        </div>
+        return;
+    }
+
     ViewData["Title"] = "Editar Persona";
 }
+
 
 <div class="container mt-4">
     <div class="card shadow rounded">
@@ -59,9 +71,15 @@
 
                     <div class="col-12 col-md-6">
                         <label asp-for="Tipo" class="form-label"></label>
-                        <input asp-for="Tipo" class="form-control" />
-                        <span asp-validation-for="Tipo" class="text-danger"></span>
+                        <select asp-for="Tipo" class="form-control">
+                            <option value="Estudiante">Estudiante</option>
+                            <option value="Funcionario">Funcionario</option>
+                            <option value="Profesor">Profesor</option>
+                            <option value="Consultorio">Consultorio</option>
+                            <option value="Administrativo">Administrativo</option>
+                        </select>
                     </div>
+
 
                     <div class="col-12 col-md-6">
                         <label asp-for="Seccion" class="form-label"></label>

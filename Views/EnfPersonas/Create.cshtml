@@ -1,8 +1,20 @@
 ﻿@model Enfermeria_app.Models.EnfPersona
 
 @{
+    var tipo = Context.Session.GetString("TipoUsuario") ?? "";
+
+    if (tipo != "Administrativo")
+    {
+        <div class="alert alert-danger mt-5 text-center">
+            <h4>⛔ Acceso denegado</h4>
+            <p>No tienes permisos para registrar personas.</p>
+        </div>
+        return;
+    }
+
     ViewData["Title"] = "Crear persona";
 }
+
 
 <div class="container py-4">
     <div class="card shadow p-4">
@@ -70,11 +82,13 @@
                 <div class="col-md-6 mb-3">
                     <label asp-for="Tipo"></label>
                     <select asp-for="Tipo" class="form-control">
-                        <option>Asistente</option>
-                        <option>Estudiante</option>
-                        <option>Funcionario</option>
-                        <option>Profesor</option>
+                        <option value="Estudiante">Estudiante</option>
+                        <option value="Funcionario">Funcionario</option>
+                        <option value="Profesor">Profesor</option>
+                        <option value="Consultorio">Consultorio</option>
+                        <option value="Administrativo">Administrativo</option>
                     </select>
+
                 </div>
 
                 <div class="col-md-6 mb-3">

@@ -1,14 +1,11 @@
 ﻿using Enfermeria_app.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Enfermeria_app.Controllers
 {
-    [Authorize]
+    [Authorize] // Se controla adentro quién puede hacer qué
     public class EnfPersonasController : Controller
     {
         private readonly EnfermeriaContext _context;
@@ -18,59 +15,80 @@ namespace Enfermeria_app.Controllers
             _context = context;
         }
 
-        // 🧪 Helper: Determinar tipo del usuario actual
-        private string TipoUsuario =>
-            User?.Claims?.FirstOrDefault(c => c.Type == "TipoUsuario")?.Value ?? "";
+        // ============================================================
+        // 🔐 MÉTODOS DE CONTROL DE PERMISOS
+        // ============================================================
+        private bool EsAdministrativo()
+        {
+            return User.HasClaim("TipoUsuario", "Administrativo");
+        }
 
-        private bool EsAdmin => TipoUsuario == "Administrativo";
-        private bool EsConsultorio => TipoUsuario == "Consultorio";
+        private bool EsConsultorio()
+        {
+            return User.HasClaim("TipoUsuario", "Consultorio");
+        }
 
-
-        // 📋 LISTADO DE PERSONAS ACTIVAS
-        [Authorize(Policy = "AdminFullAccess")] // Consultorio + Administrativo
+        // ============================================================
+        // 📋 LISTADO DE PERSONAS (solo Administrativo y Consultorio)
+        // ============================================================
         public async Task<IActionResult> Index(string searchString)
         {
+            if (!EsAdministrativo() && !EsConsultorio())
+                return RedirectToAction("AccesoDenegado", "Home");
+
             var personas = _context.EnfPersonas.Where(p => p.Activo);
 
             if (!string.IsNullOrEmpty(searchString))
             {
                 personas = personas.Where(p =>
-                    p.Nombre.Contains(searchString) ||
-                    p.Cedula.Contains(searchString));
+                    p.Nombre.Contains(searchString) || p.Cedula.Contains(searchString));
             }
 
             var lista = await personas
                 .OrderByDescending(p => p.Id)
                 .ToListAsync();
 
-            ViewData["CurrentFilter"] = searchString;
+            ViewBag.EsAdmin = EsAdministrativo();   // controla botones
+            ViewBag.EsConsultorio = EsConsultorio();
+
             return View(lista);
         }
 
-
-        // 🔍 FILTRO EN TIEMPO REAL (AJAX)
-        [Authorize(Policy = "AdminFullAccess")] // Consultorio + Administrativo
+        // ============================================================
+        // 🔍 FILTRO EN TIEMPO REAL (solo Admin/Consultorio)
+        // ============================================================
         [HttpGet]
         public async Task<IActionResult> Buscar(string term)
         {
+            if (!EsAdministrativo() && !EsConsultorio())
+                return Unauthorized();
+
             var personas = _context.EnfPersonas.Where(p => p.Activo);
 
             if (!string.IsNullOrEmpty(term))
             {
                 personas = personas.Where(p =>
-                    p.Nombre.Contains(term) ||
-                    p.Cedula.Contains(term));
+                    p.Nombre.Contains(term) || p.Cedula.Contains(term));
             }
 
             var lista = await personas.OrderByDescending(p => p.Id).ToListAsync();
+
+            ViewBag.EsAdmin = EsAdministrativo();
+            ViewBag.EsConsultorio = EsConsultorio();
+
             return PartialView("_PersonasFilas", lista);
         }
 
+        // ============================================================
+        // ❌ CRUD COMPLETO — SOLO ADMINISTRATIVO
+        // ============================================================
 
-        // 👥 VER PERSONAS INACTIVAS
-        [Authorize(Policy = "AdminFullAccess")] // Consultorio + Administrativo
+        // 🔁 INACTIVOS
         public async Task<IActionResult> Inactivos()
         {
+            if (!EsAdministrativo())
+                return RedirectToAction("AccesoDenegado", "Home");
+
             var inactivos = await _context.EnfPersonas
                 .Where(p => !p.Activo)
                 .OrderBy(p => p.Nombre)
@@ -79,12 +97,13 @@ namespace Enfermeria_app.Controllers
             return View(inactivos);
         }
 
-
-        // 🔄 REACTIVAR PERSONA
-        [Authorize(Policy = "Administrativo")] // SOLO administrativo
+        // ↩️ REACTIVAR
         [HttpPost]
         public async Task<IActionResult> Reactivar(int id)
         {
+            if (!EsAdministrativo())
+                return RedirectToAction("AccesoDenegado", "Home");
+
             var persona = await _context.EnfPersonas.FindAsync(id);
             if (persona != null)
             {
@@ -96,50 +115,51 @@ namespace Enfermeria_app.Controllers
             return RedirectToAction(nameof(Inactivos));
         }
 
-
         // 👁️ DETALLES
-        [Authorize(Policy = "AdminFullAccess")] // Consultorio + Administrativo
         public async Task<IActionResult> Details(int? id)
         {
+            if (!EsAdministrativo())
+                return RedirectToAction("AccesoDenegado", "Home");
+
             if (id == null) return NotFound();
 
-            var enfPersona = await _context.EnfPersonas
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var persona = await _context.EnfPersonas.FirstOrDefaultAsync(p => p.Id == id);
+            if (persona == null) return NotFound();
 
-            if (enfPersona == null) return NotFound();
-
-            return View(enfPersona);
+            return View(persona);
         }
 
-
-        // ➕ CREAR PERSONA
-        [Authorize(Policy = "Administrativo")] // SOLO administrativo
+        // ➕ CREAR
         [HttpGet]
         public IActionResult Create()
         {
+            if (!EsAdministrativo())
+                return RedirectToAction("AccesoDenegado", "Home");
+
             return View();
         }
 
-        [Authorize(Policy = "Administrativo")] // SOLO administrativo
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(EnfPersona model)
         {
+            if (!EsAdministrativo())
+                return RedirectToAction("AccesoDenegado", "Home");
+
             if (!ModelState.IsValid)
                 return View(model);
 
+            // Validaciones
             if (_context.EnfPersonas.Any(p => p.Cedula == model.Cedula))
             {
                 ViewBag.Error = "La cédula ya está registrada.";
                 return View(model);
             }
-
             if (_context.EnfPersonas.Any(p => p.Email == model.Email))
             {
                 ViewBag.Error = "El correo ya está registrado.";
                 return View(model);
             }
-
             if (_context.EnfPersonas.Any(p => p.Usuario == model.Usuario))
             {
                 ViewBag.Error = "El usuario ya existe.";
@@ -149,89 +169,85 @@ namespace Enfermeria_app.Controllers
             _context.EnfPersonas.Add(model);
             await _context.SaveChangesAsync();
 
-            TempData["Mensaje"] = "✅ Persona registrada correctamente.";
+            TempData["Mensaje"] = "Persona registrada correctamente.";
             return RedirectToAction(nameof(Index));
         }
 
-
-        // ✏️ EDITAR PERSONA
-        [Authorize(Policy = "Administrativo")] // SOLO administrativo
+        // ✏️ EDITAR
         public async Task<IActionResult> Edit(int? id)
         {
+            if (!EsAdministrativo())
+                return RedirectToAction("AccesoDenegado", "Home");
+
             if (id == null) return NotFound();
 
-            var enfPersona = await _context.EnfPersonas.FindAsync(id);
-            if (enfPersona == null) return NotFound();
+            var persona = await _context.EnfPersonas.FindAsync(id);
+            if (persona == null) return NotFound();
 
-            return View(enfPersona);
+            return View(persona);
         }
 
-        [Authorize(Policy = "Administrativo")] // SOLO administrativo
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, EnfPersona enfPersona)
+        public async Task<IActionResult> Edit(int id, EnfPersona persona)
         {
-            if (id != enfPersona.Id) return NotFound();
+            if (!EsAdministrativo())
+                return RedirectToAction("AccesoDenegado", "Home");
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(enfPersona);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_context.EnfPersonas.Any(e => e.Id == enfPersona.Id))
-                        return NotFound();
-                    else
-                        throw;
-                }
+            if (id != persona.Id) return NotFound();
 
-                TempData["Mensaje"] = "✅ Cambios guardados correctamente.";
-                return RedirectToAction(nameof(Index));
-            }
-            return View(enfPersona);
+            if (!ModelState.IsValid)
+                return View(persona);
+
+            _context.Update(persona);
+            await _context.SaveChangesAsync();
+
+            TempData["Mensaje"] = "Cambios guardados correctamente.";
+            return RedirectToAction(nameof(Index));
         }
 
-
-        // ❌ DESACTIVAR PERSONA
-        [Authorize(Policy = "Administrativo")] // SOLO administrativo
+        // ❌ DESACTIVAR
         public async Task<IActionResult> Delete(int? id)
         {
+            if (!EsAdministrativo())
+                return RedirectToAction("AccesoDenegado", "Home");
+
             if (id == null) return NotFound();
 
-            var enfPersona = await _context.EnfPersonas
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var persona = await _context.EnfPersonas.FirstOrDefaultAsync(m => m.Id == id);
+            if (persona == null) return NotFound();
 
-            if (enfPersona == null) return NotFound();
-
-            return View(enfPersona);
+            return View(persona);
         }
 
-        [Authorize(Policy = "Administrativo")] // SOLO administrativo
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var enfPersona = await _context.EnfPersonas.FindAsync(id);
-            if (enfPersona != null)
+            if (!EsAdministrativo())
+                return RedirectToAction("AccesoDenegado", "Home");
+
+            var persona = await _context.EnfPersonas.FindAsync(id);
+            if (persona != null)
             {
-                enfPersona.Activo = false;
-                _context.Update(enfPersona);
+                persona.Activo = false;
+                _context.Update(persona);
                 await _context.SaveChangesAsync();
             }
 
-            TempData["Mensaje"] = "⚠️ Persona desactivada correctamente.";
+            TempData["Mensaje"] = "Persona desactivada correctamente.";
             return RedirectToAction(nameof(Index));
         }
 
-
-        // 🚨 CREAR CITA DE EMERGENCIA
-        [Authorize(Policy = "Consultorio")] // SOLO consultorio, NO administrativo 
+        // ====================================================================
+        // 🚨 CREAR CITA DE EMERGENCIA (Consultorio + Administrativo)
+        // ====================================================================
         [HttpPost]
         public async Task<IActionResult> CitaEmergencia(int id)
         {
+            if (!EsAdministrativo() && !EsConsultorio())
+                return Json(new { success = false, message = "Permiso denegado." });
+
             var persona = await _context.EnfPersonas.FindAsync(id);
             if (persona == null)
                 return Json(new { success = false, message = "Persona no encontrada." });
@@ -250,7 +266,7 @@ namespace Enfermeria_app.Controllers
                     Fecha = fechaHoy,
                     Hora = horaActual,
                     Estado = "Activo",
-                    UsuarioCreacion = "Emergencia"
+                    UsuarioCreacion = User.Identity?.Name ?? "Sistema"
                 };
                 _context.EnfHorarios.Add(horario);
                 await _context.SaveChangesAsync();
@@ -263,7 +279,7 @@ namespace Enfermeria_app.Controllers
                 FechaCreacion = ahora,
                 Estado = "Creada",
                 HoraLlegada = horaActual,
-                UsuarioCreacion = "Emergencia"
+                UsuarioCreacion = User.Identity?.Name ?? "Sistema"
             };
 
             _context.EnfCitas.Add(cita);
@@ -272,7 +288,7 @@ namespace Enfermeria_app.Controllers
             return Json(new
             {
                 success = true,
-                message = $"✅ Cita de emergencia creada para {persona.Nombre} a las {horaActual:HH:mm}."
+                message = $"Cita de emergencia creada para {persona.Nombre}."
             });
         }
     }
