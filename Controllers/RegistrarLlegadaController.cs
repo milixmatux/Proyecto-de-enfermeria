@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Enfermeria_app.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "Consultorio")]
     public class RegistrarLlegadaController : Controller
     {
         private readonly EnfermeriaContext _context;
@@ -110,12 +110,24 @@ namespace Enfermeria_app.Controllers
             if (cita == null)
                 return Json(new { ok = false, msg = "Cita no encontrada." });
 
-            var profesor = await _context.EnfPersonas.FirstOrDefaultAsync(p => p.Id == idProfesor && p.Tipo == "Profesor");
-            if (profesor == null || string.IsNullOrWhiteSpace(profesor.Telefono))
-                return Json(new { ok = false, msg = "Profesor inválido o sin teléfono." });
+            var tipoPaciente = cita.IdPersonaNavigation?.Tipo?.Trim();
+
+            bool pacienteEsEstudiante = tipoPaciente == "Estudiante";
+
+            // ✔ SOLO estudiantes requieren profesor
+            EnfPersona? profesor = null;
+
+            if (pacienteEsEstudiante)
+            {
+                profesor = await _context.EnfPersonas
+                    .FirstOrDefaultAsync(p => p.Id == idProfesor && p.Tipo == "Profesor");
+
+                if (profesor == null || string.IsNullOrWhiteSpace(profesor.Telefono))
+                    return Json(new { ok = false, msg = "Selecciona un profesor válido." });
+            }
 
             if (cita.HoraLlegada != null)
-                return Json(new { ok = true, yaRegistrado = true, hora = cita.HoraLlegada?.ToString("HH:mm"), waUrl = "" });
+                return Json(new { ok = true, yaRegistrado = true, hora = cita.HoraLlegada?.ToString("HH:mm") });
 
             var ahora = TimeOnly.FromDateTime(DateTime.Now);
             cita.HoraLlegada = ahora;
@@ -125,11 +137,17 @@ namespace Enfermeria_app.Controllers
             _context.EnfCitas.Update(cita);
             await _context.SaveChangesAsync();
 
-            var tel = NormalizarCR(profesor.Telefono);
-            var texto = Uri.EscapeDataString($"{cita.IdPersonaNavigation?.Nombre} ha llegado a la enfermería a las {ahora:HH:mm}. Observaciones: {(mensaje ?? "ninguna")}");
-            var url = $"https://wa.me/{tel}?text={texto}";
+            string waUrl = "";
 
-            return Json(new { ok = true, hora = ahora.ToString("HH:mm"), waUrl = url });
+            // ✔ SOLO estudiantes reciben WhatsApp
+            if (pacienteEsEstudiante)
+            {
+                var tel = NormalizarCR(profesor!.Telefono);
+                var texto = Uri.EscapeDataString($"{cita.IdPersonaNavigation?.Nombre} ha llegado a la enfermería a las {ahora:HH:mm}. Observaciones: {(mensaje ?? "ninguna")}");
+                waUrl = $"https://wa.me/{tel}?text={texto}";
+            }
+
+            return Json(new { ok = true, hora = ahora.ToString("HH:mm"), waUrl });
         }
 
         // ============================
@@ -150,9 +168,20 @@ namespace Enfermeria_app.Controllers
             if (cita == null)
                 return Json(new { ok = false, msg = "Cita no encontrada." });
 
-            var profesor = await _context.EnfPersonas.FirstOrDefaultAsync(p => p.Id == idProfesor && p.Tipo == "Profesor");
-            if (profesor == null || string.IsNullOrWhiteSpace(profesor.Telefono))
-                return Json(new { ok = false, msg = "Profesor inválido o sin teléfono." });
+            var tipoPaciente = cita.IdPersonaNavigation?.Tipo?.Trim();
+            bool pacienteEsEstudiante = tipoPaciente == "Estudiante";
+
+            EnfPersona? profesor = null;
+
+            // ✔ SOLO estudiantes requieren profesor
+            if (pacienteEsEstudiante)
+            {
+                profesor = await _context.EnfPersonas
+                    .FirstOrDefaultAsync(p => p.Id == idProfesor && p.Tipo == "Profesor");
+
+                if (profesor == null || string.IsNullOrWhiteSpace(profesor.Telefono))
+                    return Json(new { ok = false, msg = "Selecciona un profesor válido." });
+            }
 
             if (string.IsNullOrWhiteSpace(mensaje))
                 return Json(new { ok = false, msg = "El motivo es obligatorio." });
@@ -164,7 +193,7 @@ namespace Enfermeria_app.Controllers
             }
 
             if (cita.HoraSalida != null)
-                return Json(new { ok = true, yaRegistrado = true, hora = cita.HoraSalida?.ToString("HH:mm"), waUrl = "" });
+                return Json(new { ok = true, yaRegistrado = true, hora = cita.HoraSalida?.ToString("HH:mm") });
 
             var ahora = TimeOnly.FromDateTime(DateTime.Now);
             cita.HoraSalida = ahora;
@@ -174,11 +203,18 @@ namespace Enfermeria_app.Controllers
             _context.EnfCitas.Update(cita);
             await _context.SaveChangesAsync();
 
-            var tel = NormalizarCR(profesor.Telefono);
-            var texto = Uri.EscapeDataString($"{cita.IdPersonaNavigation?.Nombre} ha salido de la enfermería a las {ahora:HH:mm}. Motivo: {mensaje}");
-            var url = $"https://wa.me/{tel}?text={texto}";
+            string waUrl = "";
 
-            return Json(new { ok = true, hora = ahora.ToString("HH:mm"), waUrl = url });
+            // ✔ SOLO estudiantes reciben WhatsApp
+            if (pacienteEsEstudiante)
+            {
+                var tel = NormalizarCR(profesor!.Telefono);
+                var texto = Uri.EscapeDataString($"{cita.IdPersonaNavigation?.Nombre} ha salido de la enfermería a las {ahora:HH:mm}. Motivo: {mensaje}");
+                waUrl = $"https://wa.me/{tel}?text={texto}";
+            }
+
+            return Json(new { ok = true, hora = ahora.ToString("HH:mm"), waUrl });
         }
+
     }
 }

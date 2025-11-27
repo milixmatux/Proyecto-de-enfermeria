@@ -35,7 +35,8 @@ public partial class EnfCita
 
     public virtual EnfHorario IdHorarioNavigation { get; set; } = null!;
 
-    public virtual EnfPersona IdPersonaNavigation { get; set; } = null!;
+    public virtual EnfPersona? IdPersonaNavigation { get; set; }
+
 
     public virtual EnfPersona? IdProfeLlegadaNavigation { get; set; }
 

@@ -33,21 +33,31 @@ else
                 var id = c.Id;
                 var llego = c.HoraLlegada.HasValue;
                 var salio = c.HoraSalida.HasValue;
-                <tr id="row-@id">
+
+                <tr id="row-@id" data-tipo="@c.IdPersonaNavigation?.Tipo">
                     <td>@c.IdPersonaNavigation?.Nombre</td>
                     <td>@c.IdPersonaNavigation?.Seccion</td>
+
 
                     <td id="td-llegada-@id">
                         @if (!llego)
                         {
                             <div class="d-flex gap-2">
-                                <select id="profL-@id" class="form-select" style="max-width: 240px;">
+                                @{
+                                    bool esEstudiante = c.IdPersonaNavigation?.Tipo == "Estudiante";
+                                }
+                                <select id="profL-@id" class="form-select" style="max-width: 240px;" @(esEstudiante ? "" : "hidden")>
                                     <option value="">Seleccionar profesor</option>
                                     @foreach (var p in profesores)
                                     {
                                         <option value="@p.Id">@p.Nombre</option>
                                     }
                                 </select>
+                                @if (!esEstudiante)
+                                {
+                                    <span class="text-muted">No requiere profesor</span>
+                                }
+
                                 <input id="obsL-@id" class="form-control" placeholder="Observaciones (opcional)" style="max-width: 260px;" />
                                 <button type="button" class="btn btn-primary" onclick="onLlegada(@id)">@WaIcon() Registrar llegada</button>
                             </div>
@@ -63,13 +73,21 @@ else
                         @if (!salio)
                         {
                             <div class="d-flex gap-2">
-                                <select id="profS-@id" class="form-select" style="max-width: 240px;" @(llego ? "" : "disabled")>
+                                @{
+                                    bool esEstudiante = c.IdPersonaNavigation?.Tipo == "Estudiante";
+                                }
+                                <select id="profS-@id" class="form-select" style="max-width: 240px;" @(llego ? "" : "disabled") @(esEstudiante ? "" : "hidden")>
                                     <option value="">Seleccionar profesor</option>
                                     @foreach (var p in profesores)
                                     {
                                         <option value="@p.Id">@p.Nombre</option>
                                     }
                                 </select>
+                                @if (!esEstudiante)
+                                {
+                                    <span class="text-muted">No requiere profesor</span>
+                                }
+
                                 <input id="diagS-@id" class="form-control" placeholder="Motivo" style="max-width: 260px;" @(llego ? "" : "disabled") />
                                 <button type="button" class="btn btn-success" onclick="onSalida(@id)" @(llego ? "" : "disabled")>@WaIcon() Registrar salida</button>
                             </div>
@@ -118,7 +136,13 @@ else
             err.textContent = '';
 
             const idProfesor = selProf?.value || '';
-            if (!idProfesor) { err.textContent = 'Selecciona un profesor.'; return; }
+                    // Si el paciente NO es estudiante, no es obligatorio profesor
+            const tipo = document.getElementById(`row-${id}`).dataset.tipo;
+            if (tipo === "Estudiante" && !idProfesor) {
+                err.textContent = 'Selecciona un profesor.';
+                return;
+            }
+
 
             const body = new URLSearchParams();
             body.set('__RequestVerificationToken', token());

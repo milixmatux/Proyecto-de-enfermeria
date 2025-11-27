@@ -54,28 +54,40 @@ namespace Enfermeria_app.Controllers
                 c.IdHorarioNavigation.Fecha >= fechaDesde &&
                 c.IdHorarioNavigation.Fecha <= fechaHasta);
 
-            // ✅ Si es estudiante → solo sus propias citas
-            if (tipoUsuario == "Estudiante")
-            {
-                var persona = await _context.EnfPersonas
-                    .FirstOrDefaultAsync(p => p.Usuario == usuario);
+            // Obtener persona actual
+            var personaActual = await _context.EnfPersonas
+                .FirstOrDefaultAsync(p => p.Usuario == usuario);
 
-                if (persona != null)
-                    query = query.Where(c => c.IdPersona == persona.Id);
+            // =======================================
+            // 🔹 1. ESTUDIANTE / FUNCIONARIO / PROFESOR
+            //    → Solo pueden ver sus comprobantes
+            // =======================================
+            if (tipoUsuario == "Estudiante" ||
+                tipoUsuario == "Funcionario" ||
+                tipoUsuario == "Profesor")
+            {
+                if (personaActual != null)
+                    query = query.Where(c => c.IdPersona == personaActual.Id);
                 else
-                    query = query.Where(c => false); // No muestra nada
+                    query = query.Where(c => false);
             }
             else
             {
-                // ✅ Si es asistente o doctor → puede filtrar por nombre o cédula
+                // =======================================
+                // 🔹 2. CONSULTORIO / ADMINISTRATIVO
+                //    → Sí pueden buscar por nombre/cédula
+                // =======================================
                 if (!string.IsNullOrWhiteSpace(nombre))
                 {
-                    nombre = nombre.Trim().ToLower();
+                    var filtro = nombre.Trim().ToLower();
+
                     query = query.Where(c =>
-                        (c.IdPersonaNavigation!.Nombre.ToLower().Contains(nombre)) ||
-                        (c.IdPersonaNavigation!.Cedula.ToLower().Contains(nombre)));
+                        (c.IdPersonaNavigation!.Nombre.ToLower().Contains(filtro)) ||
+                        (c.IdPersonaNavigation!.Cedula.ToLower().Contains(filtro))
+                    );
                 }
             }
+
 
             var citas = await query
                 .OrderByDescending(c => c.IdHorarioNavigation!.Fecha)

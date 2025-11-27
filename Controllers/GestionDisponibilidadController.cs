@@ -8,7 +8,7 @@ using System.Globalization;
 
 namespace Enfermeria_app.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "Consultorio")]
     public class GestionDisponibilidadController : Controller
     {
         private readonly EnfermeriaContext _context;
