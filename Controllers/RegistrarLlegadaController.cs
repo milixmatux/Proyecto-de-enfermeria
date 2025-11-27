@@ -171,9 +171,9 @@ namespace Enfermeria_app.Controllers
             var tipoPaciente = cita.IdPersonaNavigation?.Tipo?.Trim();
             bool pacienteEsEstudiante = tipoPaciente == "Estudiante";
 
+            // ✔ SOLO estudiantes requieren profesor
             EnfPersona? profesor = null;
 
-            // ✔ SOLO estudiantes requieren profesor
             if (pacienteEsEstudiante)
             {
                 profesor = await _context.EnfPersonas
@@ -183,6 +183,7 @@ namespace Enfermeria_app.Controllers
                     return Json(new { ok = false, msg = "Selecciona un profesor válido." });
             }
 
+            // Motivo obligatorio SIEMPRE
             if (string.IsNullOrWhiteSpace(mensaje))
                 return Json(new { ok = false, msg = "El motivo es obligatorio." });
 
@@ -205,7 +206,7 @@ namespace Enfermeria_app.Controllers
 
             string waUrl = "";
 
-            // ✔ SOLO estudiantes reciben WhatsApp
+            // ✔ SOLO enviar WhatsApp si es estudiante
             if (pacienteEsEstudiante)
             {
                 var tel = NormalizarCR(profesor!.Telefono);
@@ -215,6 +216,7 @@ namespace Enfermeria_app.Controllers
 
             return Json(new { ok = true, hora = ahora.ToString("HH:mm"), waUrl });
         }
+
 
     }
 }

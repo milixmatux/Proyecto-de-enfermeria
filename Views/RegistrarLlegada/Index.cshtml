@@ -172,16 +172,31 @@ else
             }
         }
 
-        async function onSalida(id) {
+                async function onSalida(id) {
             const selProf = document.getElementById(`profS-${id}`);
-            const diag    = document.getElementById(`diagS-${id}`);
-            const err     = document.getElementById(`errS-${id}`);
+            let idProfesor = selProf?.value || '';
+            const diag = document.getElementById(`diagS-${id}`);
+            const err = document.getElementById(`errS-${id}`);
 
             err.textContent = '';
 
-            const idProfesor = selProf?.value || '';
-            if (!idProfesor) { err.textContent = 'Selecciona un profesor.'; return; }
-            if (!diag?.value?.trim()) { err.textContent = 'El motivo es obligatorio.'; return; }
+            const tipo = document.getElementById(`row-${id}`).dataset.tipo;
+
+            // 🔹 Si el paciente es Estudiante → profesor obligatorio
+            if (tipo === "Estudiante" && !idProfesor) {
+                err.textContent = 'Selecciona un profesor.';
+                return;
+            }
+
+            // 🔹 Si NO es estudiante → ignorar profesor
+            if (tipo !== "Estudiante") {
+                idProfesor = 0;
+            }
+
+            if (!diag?.value?.trim()) {
+                err.textContent = 'El motivo es obligatorio.';
+                return;
+            }
 
             const body = new URLSearchParams();
             body.set('__RequestVerificationToken', token());
@@ -195,6 +210,7 @@ else
                 if (!res.ok) { err.textContent = res.msg || 'Error.'; return; }
 
                 document.getElementById(`td-salida-${id}`).innerHTML = res.hora;
+
                 const msgTd = document.getElementById(`td-msg-${id}`);
                 if (msgTd) msgTd.innerText = diag.value.trim();
 
@@ -205,5 +221,6 @@ else
                 err.textContent = 'Error inesperado.';
             }
         }
+
     </script>
 }
